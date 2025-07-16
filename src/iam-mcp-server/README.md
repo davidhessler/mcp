@@ -7,7 +7,9 @@ A Model Context Protocol (MCP) server for comprehensive AWS Identity and Access 
 ### Core IAM Management
 - **User Management**: Create, list, retrieve, and delete IAM users
 - **Role Management**: Create, list, and manage IAM roles with trust policies
+- **Group Management**: Create, list, retrieve, and delete IAM groups with member management
 - **Policy Management**: List and manage IAM policies (managed and inline)
+- **Inline Policy Management**: Full CRUD operations for user and role inline policies
 - **Permission Management**: Attach/detach policies to users and roles
 - **Access Key Management**: Create and delete access keys for users
 - **Security Simulation**: Test policy permissions before applying them
@@ -74,6 +76,16 @@ The AWS credentials used by this server need the following IAM permissions:
                 "iam:GetRole",
                 "iam:CreateRole",
                 "iam:DeleteRole",
+                "iam:ListGroups",
+                "iam:GetGroup",
+                "iam:CreateGroup",
+                "iam:DeleteGroup",
+                "iam:AddUserToGroup",
+                "iam:RemoveUserFromGroup",
+                "iam:AttachGroupPolicy",
+                "iam:DetachGroupPolicy",
+                "iam:ListAttachedGroupPolicies",
+                "iam:ListGroupPolicies",
                 "iam:ListPolicies",
                 "iam:GetPolicy",
                 "iam:CreatePolicy",
@@ -86,13 +98,18 @@ The AWS credentials used by this server need the following IAM permissions:
                 "iam:ListAttachedRolePolicies",
                 "iam:ListUserPolicies",
                 "iam:ListRolePolicies",
+                "iam:GetUserPolicy",
+                "iam:GetRolePolicy",
+                "iam:PutUserPolicy",
+                "iam:PutRolePolicy",
                 "iam:GetGroupsForUser",
                 "iam:ListAccessKeys",
                 "iam:CreateAccessKey",
                 "iam:DeleteAccessKey",
                 "iam:SimulatePrincipalPolicy",
                 "iam:RemoveUserFromGroup",
-                "iam:DeleteUserPolicy"
+                "iam:DeleteUserPolicy",
+                "iam:DeleteRolePolicy"
             ],
             "Resource": "*"
         }
@@ -140,8 +157,13 @@ Add to your `cline_mcp_settings.json`:
 }
 ```
 
-#### Cursor
-[![Install in Cursor](https://img.shields.io/badge/Install%20in-Cursor-blue?style=flat-square&logo=cursor)](cursor://mcp/install?config=ewogICJtY3BTZXJ2ZXJzIjogewogICAgImF3c2xhYnMuaWFtLW1jcC1zZXJ2ZXIiOiB7CiAgICAgICJjb21tYW5kIjogInV2eCIsCiAgICAgICJhcmdzIjogWyJhd3NsYWJzLmlhbS1tY3Atc2VydmVyQGxhdGVzdCJdLAogICAgICAiZW52IjogewogICAgICAgICJBV1NfUFJPRklMRSI6ICJ5b3VyLWF3cy1wcm9maWxlIiwKICAgICAgICAiQVdTX1JFR0lPTiI6ICJ1cy1lYXN0LTEiLAogICAgICAgICJGQVNUTUNQX0xPR19MRVZFTCI6ICJFUlJPUiIKICAgICAgfQogICAgfQogIH0KfQo=)
+#### One-Click Installation
+
+| Cursor | VS Code |
+|:------:|:-------:|
+| [![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/install-mcp?name=awslabs.iam-mcp-server&config=eyJjb21tYW5kIjoidXZ4IiwiYXJncyI6WyJhd3NsYWJzLmlhbS1tY3Atc2VydmVyQGxhdGVzdCJdLCJlbnYiOnsiQVdTX1BST0ZJTEUiOiJ5b3VyLWF3cy1wcm9maWxlIiwiQVdTX1JFR0lPTiI6InVzLWVhc3QtMSIsIkZBU1RNQ1BfTE9HX0xFVkVMIjoiRVJST1IifX0%3D) | [![Install on VS Code](https://img.shields.io/badge/Install_on-VS_Code-FF9900?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=AWS%20IAM%20MCP%20Server&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22awslabs.iam-mcp-server%40latest%22%5D%2C%22env%22%3A%7B%22AWS_PROFILE%22%3A%22your-aws-profile%22%2C%22AWS_REGION%22%3A%22us-east-1%22%2C%22FASTMCP_LOG_LEVEL%22%3A%22ERROR%22%7D%7D) |
+
+#### Manual Configuration
 
 Add to your `.cursor/mcp.json`:
 
@@ -274,6 +296,63 @@ Create a new IAM role with a trust policy.
 - `max_session_duration` (optional): Maximum session duration in seconds (default: 3600)
 - `permissions_boundary` (optional): ARN of the permissions boundary policy
 
+### Group Management
+
+#### `list_groups`
+List IAM groups in the account with optional filtering.
+
+**Parameters:**
+- `path_prefix` (optional): Path prefix to filter groups (e.g., "/division_abc/")
+- `max_items` (optional): Maximum number of groups to return (default: 100)
+
+#### `get_group`
+Get detailed information about a specific IAM group including members, attached policies, and inline policies.
+
+**Parameters:**
+- `group_name`: The name of the IAM group to retrieve
+
+#### `create_group`
+Create a new IAM group.
+
+**Parameters:**
+- `group_name`: The name of the new IAM group
+- `path` (optional): The path for the group (default: "/")
+
+#### `delete_group`
+Delete an IAM group with optional force cleanup.
+
+**Parameters:**
+- `group_name`: The name of the IAM group to delete
+- `force` (optional): Force delete by removing all members and policies first (default: false)
+
+#### `add_user_to_group`
+Add a user to an IAM group.
+
+**Parameters:**
+- `group_name`: The name of the IAM group
+- `user_name`: The name of the IAM user
+
+#### `remove_user_from_group`
+Remove a user from an IAM group.
+
+**Parameters:**
+- `group_name`: The name of the IAM group
+- `user_name`: The name of the IAM user
+
+#### `attach_group_policy`
+Attach a managed policy to an IAM group.
+
+**Parameters:**
+- `group_name`: The name of the IAM group
+- `policy_arn`: The ARN of the policy to attach
+
+#### `detach_group_policy`
+Detach a managed policy from an IAM group.
+
+**Parameters:**
+- `group_name`: The name of the IAM group
+- `policy_arn`: The ARN of the policy to detach
+
 ### Policy Management
 
 #### `list_policies`
@@ -327,6 +406,64 @@ Simulate IAM policy evaluation for a principal to test permissions.
 - `resource_arns` (optional): List of resource ARNs to test against
 - `context_entries` (optional): Context entries for the simulation
 
+### Inline Policy Management
+
+#### `put_user_policy`
+Create or update an inline policy for an IAM user.
+
+**Parameters:**
+- `user_name`: The name of the IAM user
+- `policy_name`: The name of the inline policy
+- `policy_document`: The policy document in JSON format (string or dict)
+
+#### `get_user_policy`
+Retrieve an inline policy for an IAM user.
+
+**Parameters:**
+- `user_name`: The name of the IAM user
+- `policy_name`: The name of the inline policy
+
+#### `delete_user_policy`
+Delete an inline policy from an IAM user.
+
+**Parameters:**
+- `user_name`: The name of the IAM user
+- `policy_name`: The name of the inline policy to delete
+
+#### `list_user_policies`
+List all inline policies for an IAM user.
+
+**Parameters:**
+- `user_name`: The name of the IAM user
+
+#### `put_role_policy`
+Create or update an inline policy for an IAM role.
+
+**Parameters:**
+- `role_name`: The name of the IAM role
+- `policy_name`: The name of the inline policy
+- `policy_document`: The policy document in JSON format (string or dict)
+
+#### `get_role_policy`
+Retrieve an inline policy for an IAM role.
+
+**Parameters:**
+- `role_name`: The name of the IAM role
+- `policy_name`: The name of the inline policy
+
+#### `delete_role_policy`
+Delete an inline policy from an IAM role.
+
+**Parameters:**
+- `role_name`: The name of the IAM role
+- `policy_name`: The name of the inline policy to delete
+
+#### `list_role_policies`
+List all inline policies for an IAM role.
+
+**Parameters:**
+- `role_name`: The name of the IAM role
+
 ## Usage Examples
 
 ### Basic User Management
@@ -368,6 +505,30 @@ role = await create_role(
 )
 ```
 
+### Group Management
+```python
+# Create a new group
+group = await create_group(
+    group_name="Developers",
+    path="/teams/"
+)
+
+# Add users to the group
+await add_user_to_group(
+    group_name="Developers",
+    user_name="john.doe"
+)
+
+# Attach a policy to the group
+await attach_group_policy(
+    group_name="Developers",
+    policy_arn="arn:aws:iam::123456789012:policy/DeveloperPolicy"
+)
+
+# Get group details including members
+group_details = await get_group(group_name="Developers")
+```
+
 ### Policy Management
 ```python
 # List customer managed policies
@@ -390,6 +551,58 @@ simulation = await simulate_principal_policy(
 )
 ```
 
+### Inline Policy Management
+```python
+# Create an inline policy for a user
+policy_document = {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": ["s3:GetObject", "s3:PutObject"],
+            "Resource": "arn:aws:s3:::my-bucket/*"
+        }
+    ]
+}
+
+await put_user_policy(
+    user_name="developer",
+    policy_name="S3AccessPolicy",
+    policy_document=policy_document
+)
+
+# Retrieve an inline policy
+policy = await get_user_policy(
+    user_name="developer",
+    policy_name="S3AccessPolicy"
+)
+
+# List all inline policies for a user
+policies = await list_user_policies(user_name="developer")
+
+# Create an inline policy for a role
+await put_role_policy(
+    role_name="EC2-S3-Access-Role",
+    policy_name="S3ReadOnlyPolicy",
+    policy_document={
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": "s3:GetObject",
+                "Resource": "*"
+            }
+        ]
+    }
+)
+
+# Delete an inline policy
+await delete_user_policy(
+    user_name="developer",
+    policy_name="S3AccessPolicy"
+)
+```
+
 ## Security Best Practices
 
 1. **Principle of Least Privilege**: Always grant the minimum permissions necessary
@@ -399,6 +612,8 @@ simulation = await simulate_principal_policy(
 5. **Enable MFA**: Use multi-factor authentication where possible
 6. **Permissions Boundaries**: Use permissions boundaries to set maximum permissions
 7. **Policy Simulation**: Test policies before applying them to production
+8. **Prefer Managed Policies**: Use managed policies over inline policies for reusable permissions
+9. **Inline Policy Guidelines**: Use inline policies only for permissions unique to a single identity
 
 ## Error Handling
 
@@ -434,11 +649,11 @@ python -m awslabs.iam_mcp_server.server
 
 ## Contributing
 
-Contributions are welcome! Please see the main repository's [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines.
+Contributions are welcome! Please see the main repository's [CONTRIBUTING.md](https://github.com/awslabs/mcp/blob/main/CONTRIBUTING.md) for guidelines.
 
 ## License
 
-This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0. See the [LICENSE](https://github.com/awslabs/mcp/blob/main/src/iam-mcp-server/LICENSE) file for details.
 
 ## Support
 
@@ -449,4 +664,4 @@ For issues and questions:
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for version history and changes.
+See [CHANGELOG.md](https://github.com/awslabs/mcp/blob/main/src/iam-mcp-server/CHANGELOG.md) for version history and changes.
