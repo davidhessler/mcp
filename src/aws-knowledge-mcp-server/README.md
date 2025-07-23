@@ -2,6 +2,8 @@
 
 A fully managed remote MCP server that provides up-to-date documentation, code samples, and other official AWS content.
 
+This MCP server is currently in preview release and is intended for testing and evaluation purposes.
+
 **Important Note**: Not all MCP clients today support remote servers. Please make sure that your client supports remote MCP servers or that you have a suitable proxy setup to use this server.
 
 ### Key Features
@@ -55,7 +57,7 @@ You can configure the Knowledge server for use with any MCP client that supports
 {
     "mcpServers": {
         "aws-knowledge-mcp-server": {
-            "url": "https://knowledge-mcp.global.api.aws",
+            "url": "https://knowledge-mcp.global.api.aws"
         }
     }
 }
