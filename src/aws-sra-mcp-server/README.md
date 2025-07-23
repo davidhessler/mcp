@@ -1,6 +1,11 @@
 # AWS Security Reference Architecture MCP Server
 
-An MCP server that provides access to AWS Security Reference Architecture (SRA) documentation and security best practices.
+The AWS SRA is a holistic set of guidelines for deploying the full complement of AWS security services in a multi-account environment. Use it to help design, implement, and manage AWS security services so that they align with AWS recommended practices. he recommendations are built around architecture that includes AWS security services—how they help achieve security objectives, where they can be best deployed and managed in your AWS accounts, and how they interact with other security services.
+
+The SRA consists of content in both prescriptive guidance, CloudFormation and Terraform code examples, and assessment tooling to determine how compliant an AWS environment.
+
+The AWS SRA MCP Server enables 
+
 
 ## Overview
 
