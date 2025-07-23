@@ -17,6 +17,8 @@ import os
 import re
 import uuid
 
+from mcp import McpError
+
 from awslabs.aws_sra_mcp_server import SECURITY_KEYWORDS
 # Import models
 from awslabs.aws_sra_mcp_server.models import (
@@ -25,11 +27,11 @@ from awslabs.aws_sra_mcp_server.models import (
 )
 
 from awslabs.aws_sra_mcp_server.server_utils import (
-    read_documentation_html, read_documentation_markdown, read_code
+    read_documentation_html, read_documentation_markdown, read_other
 )
 
 # Import search functionality
-from awslabs.aws_sra_mcp_server.github import search_github
+from awslabs.aws_sra_mcp_server.github import search_github, get_issue_markdown, get_pr_markdown, get_raw_code
 from awslabs.aws_sra_mcp_server.aws_documentation import search_sra_documentation, get_recommendations
 
 from loguru import logger
@@ -45,7 +47,7 @@ from typing import List, Dict, Any, Optional, Tuple
 
 SESSION_UUID = str(uuid.uuid4())
 
-mcp = FastMCP(
+MCP = FastMCP(
     "awslabs.aws-sra-mcp-server",
     instructions="""
     # AWS Security Reference Architecture MCP Server
@@ -67,8 +69,8 @@ mcp = FastMCP(
 
     ## Tool Selection Guide
 
-    - Use `search_documentation` when: You need to find documentation about AWS security services, compliance, or security best practices
-    - Use `read_documentation` when: You have a specific security documentation URL and need its content
+    - Use `search_security_and_compliance_best_practices_content` when: You need to find documentation about AWS security services, compliance, or security best practices
+    - Use `read_security_and_compliance_best_practices_content` when: You have a specific security documentation URL and need its content
     - Use `recommend` when: You want to find related security content to a documentation page you're already viewing
     """,
     dependencies=[
@@ -82,25 +84,32 @@ async def get_github_token(ctx: Context) -> str | None:
     token = os.environ.get("GITHUB_TOKEN")
     if not token:
         logger.warning("GITHUB_TOKEN not set in environment variables")
-        result = await ctx.elicit(
-            message="GITHUB_TOKEN not set in environment variables. Provide a GITHUB_TOKEN.",
-            response_type=str,
-        )
-        match result:
-            case AcceptedElicitation(data=token):
-                print('Received GITHUB TOKEN from user. Continuing')
-                return token
-            case DeclinedElicitation():
-                print('User declined to provide GITHUB TOKEN. Continuing without GitHub search.')
-                return ''
-            case CancelledElicitation():
-                print('User cancelled. Exiting.')
-                return None
+        try:
+            result = await ctx.elicit(
+                message="GITHUB_TOKEN not set in environment variables. Provide a GITHUB_TOKEN.",
+                response_type=str,
+            )
+            match result:
+                case AcceptedElicitation(data=token):
+                    print('Received GITHUB TOKEN from user. Continuing')
+                    return token
+                case DeclinedElicitation():
+                    print('User declined to provide GITHUB TOKEN. Continuing without GitHub search.')
+                    return ''
+                case CancelledElicitation():
+                    print('User cancelled. Exiting.')
+                    return None
+                case _:
+                    return None
+        except McpError as e:
+            if not 'Elicitation not supported' in e.args:
+                logger.error(f"Error eliciting GITHUB_TOKEN: {e}")
+            return None
     else:
         return token
 
-@mcp.tool()
-async def read_documentation(
+@MCP.tool()
+async def read_security_and_compliance_best_practices_content(
     ctx: Context,
     url: str = Field(
         description="URL of the AWS Security Reference Architecture documentation page to read"
@@ -117,25 +126,25 @@ async def read_documentation(
         ge=0,
     ),
 ) -> str:
-    """Fetch and convert an AWS Security Reference Architecture documentation page to markdown format.
+    """Fetch security and compliance best practices content stored in the AWS Security Reference Architecture and convert it into markdown format.
 
     ## Usage
 
-    This tool retrieves the content of an AWS Security Reference Architecture documentation page and converts it to markdown format.
+    This tool retrieves the content of an AWS Security Reference Architecture content stores and converts it to markdown format.
     For long documents, you can make multiple calls with different start_index values to retrieve
     the entire content in chunks.
 
     ## URL Requirements
 
-    - Must be from the docs.aws.amazon.com domain
-    - Must end with .html
-    - Preferably related to Security Reference Architecture, security services, or compliance
+    - Must be from the docs.aws.amazon.com domain, code, issues, or pull requests from github
+    - Preferably related to Security Reference Architecture, security services or compliance
 
     ## Example URLs
 
     - https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html
-    - https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html
-    - https://docs.aws.amazon.com/audit-manager/latest/userguide/compliance-validation.html
+    - https://github.com/awslabs/sra-verify/blob/af737628e43a16f755f0aa45cb15474009819f73/sraverify/sraverify/services/securityhub/checks/sra_securityhub_10.py
+    - https://github.com/aws-samples/aws-security-reference-architecture-examples/issues/233
+    - https://github.com/aws-samples/aws-security-reference-architecture-examples/pull/167
 
     ## Output Format
 
@@ -153,7 +162,7 @@ async def read_documentation(
 
     Args:
         ctx: MCP context for logging and error handling
-        url: URL of the AWS Security Reference Architecture documentation page to read
+        url: URL of the AWS Security Reference Architecture content to read
         max_length: Maximum number of characters to return
         start_index: On return output starting at this character index
 
@@ -169,11 +178,17 @@ async def read_documentation(
         return await read_documentation_html(ctx, url_str, max_length, start_index, SESSION_UUID)
     elif url_str.endswith(".md"):
         return await read_documentation_markdown(ctx, url_str, max_length, start_index, SESSION_UUID)
+    elif re.search(r"issues/\d+(?=$|[/?#])", url_str):
+        return await get_issue_markdown(ctx, url_str,max_length, start_index)
+    elif re.search(r'pull/\d+(?=$|[/?#])', url_str):
+        return await get_pr_markdown(ctx, url_str, max_length, start_index)
+    elif re.match(r"^https?://github\.com/", url_str):
+        return await get_raw_code(ctx, url_str, max_length, start_index, SESSION_UUID)
     else:
-        return await read_code(ctx, url_str, max_length, start_index, SESSION_UUID)
+        return await read_other(ctx, url_str, max_length, start_index, SESSION_UUID)
 
-@mcp.tool()
-async def search_documentation(
+@MCP.tool()
+async def search_security_and_compliance_best_practices_content(
     ctx: Context,
     search_phrase: str = Field(
         description="Search phrase to use for finding security and compliance documentation"
@@ -185,30 +200,29 @@ async def search_documentation(
         le=50,
     )
 ) -> List[SearchResult]:
-    """Search AWS Security Reference Architecture documentation and GitHub repositories.
+    """Search security and compliance best practices content stored in the AWS Security Reference Architecture prescriptive guidance and GitHub repositories.
 
     ## Usage
 
     This tool searches across multiple sources:
-    1. AWS Security Reference Architecture and security-related documentation
+    1. AWS Security Reference Architecture as well as security and compliance related documentation
     2. GitHub code repositories: awslabs/sra-verify and aws-samples/aws-security-reference-architecture-examples
     
-    It returns results from both sources, prioritizing security-related content.
+    It returns results from both sources prioritizing an equal mix of documentation and content from GitHub (i.e., code, issues, and pull requests).
 
     ## Search Tips
 
     - Use specific security and compliance terms rather than general phrases
-    - Include security service names to narrow results (e.g., "Security Hub compliance standards" instead of just "compliance standards")
-    - Use quotes for exact phrase matching (e.g., "AWS Security Reference Architecture")
-    - Include security-related abbreviations like "SRA", "NIST", "PCI DSS", "HIPAA", etc.
+    - Use quotes for exact phrase matching (e.g., "Security Hub" or "Security Account")
+    - Include security or compliance related abbreviations like "SRA", "NIST 800-53", "PCI DSS", "HIPAA", etc.
     - Add "security" or "compliance" to your search terms to focus on security-related content
-    - For GitHub-specific searches, include terms like "code", "implementation", or "example"
+    - For GitHub-specific searches, include terms like "code", "implementation", "example", "issues", "pull requests", "problems", and "solutions"
 
     ## Result Interpretation
 
     Each result includes:
     - rank_order: The relevance ranking (lower is more relevant)
-    - url: The documentation page URL or GitHub URL
+    - url: The prescriptive guidance page URL or GitHub URL
     - title: The page title or GitHub resource title
     - context: A brief excerpt or summary (if available)
     
@@ -225,31 +239,25 @@ async def search_documentation(
     Returns:
         List of security-focused search results with URLs, titles, and context snippets
     """
-    logger.debug(
+    await ctx.debug(
         f"Searching AWS Security Reference Architecture documentation for: {search_phrase}"
     )
-    # Enhance search phrase with security focus if not already present
-    search_phrase
 
     try:
         # Search AWS documentation
-        aws_docs_results = await search_sra_documentation(search_phrase, limit)
+        aws_docs_results = await search_sra_documentation(ctx, search_phrase, limit)
         
         # Log that we're searching GitHub repositories
         await ctx.info(f"Searching SRA GitHub repositories for: {search_phrase}")
         
         # Search GitHub repositories
         # Use token from environment variable
-        token = get_github_token(ctx)
+        token = await get_github_token(ctx)
 
-        if token is not None and len(token) > 0:
-            github_results = await search_github(search_phrase, limit, token)
-        else:
-            # Fallback in case token is not available
-            github_results = []
-        
+        github_results = await search_github(ctx, search_phrase, limit, token)
+
         # Log the number of GitHub results found
-        logger.debug(f"Found {len(github_results)} GitHub results for: {search_phrase}")
+        await ctx.debug(f"Found {len(github_results)} GitHub results for: {search_phrase}")
         
         # If both searches failed, return an error
         if not aws_docs_results and not github_results:
@@ -263,7 +271,7 @@ async def search_documentation(
         return [SearchResult(rank_order=1, url="", title=error_msg, context=None)]
 
     # Combine and filter results
-    combined_results = []
+    aws_docs_filtered_results = []
 
     # Filter AWS documentation results
     for result in aws_docs_results:
@@ -276,55 +284,68 @@ async def search_documentation(
         )
         
         # Add to combined results if security-related or if we don't have enough results yet
-        if is_security_related or len(combined_results) < limit:
-            combined_results.append(result)
+        if is_security_related or len(aws_docs_filtered_results) < limit:
+            aws_docs_filtered_results.append(result)
     
-    # Add GitHub results (they're already related to SRA by repository selection)
-    combined_results.extend(github_results)
-    
+    # Compute Limits -- deprioritize docs over gh content
+    docs_limit = limit // 2 if limit % 2 == 0 else (limit // 2) - 1
+    gh_limit = limit // 2 if limit % 2 == 0 else (limit // 2) + 1
+
+    # Filter by Limit
+    combined_results = aws_docs_filtered_results[:docs_limit]
+    if docs_limit > len(aws_docs_filtered_results):
+        gh_limit = limit - len(aws_docs_filtered_results)
+
+    combined_results += github_results[:gh_limit]
+
     # Sort by rank_order and limit results
     combined_results.sort(key=lambda x: x.rank_order)
-    results = combined_results[:limit]
 
-    logger.debug(f"Found {len(results)} security-focused search results for: {search_phrase}")
-    return results
+    logger.debug(f"Found {len(combined_results)} security-focused search results for: {search_phrase}")
+    return combined_results
 
 
-@mcp.tool()
+@MCP.tool()
 async def recommend(
     ctx: Context,
     url: str = Field(
         description="URL of the AWS Security Reference Architecture documentation page to get recommendations for"
     ),
+    limit: int = Field(
+        default=10,
+        description="Maximum number of results to return",
+        ge=1,
+        le=50,
+    )
 ) -> List[RecommendationResult]:
-    """Get security content recommendations for an AWS Security Reference Architecture documentation page.
+    """Get security and compliance content recommendations for AWS Security Reference Architecture content.
 
     ## Usage
 
-    This tool provides recommendations for related AWS security documentation pages based on a given URL.
+    This tool provides recommendations for related AWS security and compliance best practices based on a given URL.
     Use it to discover additional relevant security and compliance content that might not appear in search results.
 
     ## Recommendation Types
 
     The recommendations include four categories:
 
-    1. **Highly Rated**: Popular security pages within the same AWS service
-    2. **New**: Recently added security pages within the same AWS service - useful for finding newly released security features
-    3. **Similar**: Pages covering similar security topics to the current page
-    4. **Journey**: Pages commonly viewed next by other security professionals
+    1. **Highly Rated**: Popular security and compliance pages
+    2. **New**: Recently added security and compliance pages - useful for finding newly released security and compliance features
+    3. **Similar**: Pages covering similar security anc compliance topics
+    4. **Journey**: Pages commonly viewed next by other security and compliance professionals
 
     ## When to Use
 
-    - After reading a security documentation page to find related content
-    - When exploring a new AWS security service to discover important pages
-    - To find alternative explanations of complex security concepts
-    - To discover the most popular security pages for a service
-    - To find newly released security information by using a service's welcome page URL
+    - After reading a security and compliance content to find related content
+    - When exploring a new AWS security or compliance service to discover important content
+    - To find alternative explanations of complex security and compliance concepts
+    - To discover the most popular security and compliance content for a service
+    - To find newly released security and compliance information by using a service's welcome page URL
 
     ## Finding New Security Features
 
-    To find newly released security information about a service:
-    1. Find any page belonging to that security service, typically you can try the welcome page
+    To find newly released security or compliance information associated with AWS:
+    1. Find any page belonging to an AWS service, typically you can try the welcome page
     2. Call this tool with that URL
     3. Look specifically at the **New** recommendation type in the results
 
@@ -338,7 +359,7 @@ async def recommend(
     Args:
         ctx: MCP context for logging and error handling
         url: URL of the AWS Security Reference Architecture documentation page to get recommendations for
-
+        limit: Maximum number of results to return
     Returns:
         List of recommended security pages with URLs, titles, and context
     """
@@ -346,7 +367,7 @@ async def recommend(
     logger.debug(f"Getting security recommendations for: {url_str}")
 
     try:
-        results = await get_recommendations(url_str)
+        results = await get_recommendations(ctx, url_str)
     except Exception as e:
         error_msg = f"Error getting security recommendations: {str(e)}"
         logger.error(error_msg)
@@ -375,6 +396,7 @@ async def recommend(
         "detective",
         "inspector",
         "macie",
+        "security incident response",
     ]
 
     security_results = []
@@ -391,9 +413,9 @@ async def recommend(
             security_results.append(result)
 
     # If we don't have enough security-related results, include some of the original results
-    if len(security_results) < 5 and results:
+    if len(security_results) < limit and results:
         remaining_results = [r for r in results if r not in security_results]
-        security_results.extend(remaining_results[: 5 - len(security_results)])
+        security_results.extend(remaining_results[: limit - len(security_results)])
 
     logger.debug(f"Found {len(security_results)} security-focused recommendations for: {url_str}")
     return security_results
@@ -404,7 +426,7 @@ async def recommend(
 def main():
     """Run the MCP server with CLI argument support."""
     logger.info("Starting AWS Security Reference Architecture MCP Server")
-    mcp.run()
+    MCP.run()
 
 
 if __name__ == "__main__":

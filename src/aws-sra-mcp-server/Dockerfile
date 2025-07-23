@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/python:3.13-slim as builder
+FROM public.ecr.aws/docker/library/python:3.13-slim AS builder
 
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
@@ -17,37 +17,40 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml uv.lock docker-healthcheck.sh LICENSE .python-version README.md /app/
+COPY awslabs/ /app/awslabs/
+
 RUN --mount=type=cache,target=/root/.cache/uv \
     /root/.local/bin/uv sync --frozen --no-install-project --no-dev --no-editable
 
-COPY . .
 RUN --mount=type=cache,target=/root/.cache/uv \
     /root/.local/bin/uv sync --frozen --no-dev --no-editable
 
-FROM public.ecr.aws/sam/build-python3.13@sha256:0df1547849c376aa21f9c726c0d71c4974415ed4405256f8d79f8c25716a9c63
+FROM public.ecr.aws/docker/library/python:3.13-slim
 
-ENV PATH="/app/.venv/bin:$PATH"
+ENV PATH="/app/.venv/bin:$PATH:/usr/sbin"
 
 # Install lsof for the healthcheck
 # Install other tools as needed for the MCP server
 # Add non-root user and ability to change directory into /root
-RUN dnf update -y && \
-    dnf install -y lsof && \
-    dnf clean all -y && \
-    rm -rf /var/cache/dnf && \
-#    groupadd --force --system app && \
-#    useradd app -g app -d /app && \
-    chmod o+x /root
+RUN apt-get update -y \
+    && apt-get install -y lsof \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --force --system app \
+    && useradd app -g app -d /app \
+    && chmod o+x /root \
+    && pip3 install fastmcp
 
+# Copy only necessary files from builder, not the .venv folder
 COPY --from=builder --chown=app:app /root/.local /root/.local
-COPY --from=builder --chown=app:app /app/.venv /app/.venv
-COPY --chmod=755 ./docker-healthcheck.sh /usr/local/bin/
+COPY --from=builder --chown=app:app /app/.venv/ /app/.venv
+COPY --from=builder --chown=app:app --chmod=755 /app/docker-healthcheck.sh /usr/local/bin/
 
 #USER app
 WORKDIR /app
 
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD ["docker-healthcheck.sh"]
+    CMD ["/usr/local/bin/docker-healthcheck.sh"]
 
-ENTRYPOINT ["awslabs.aws_sra_mcp_server"]
+ENTRYPOINT ["aws-sra-mcp-server"]

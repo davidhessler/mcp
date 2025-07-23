@@ -153,7 +153,7 @@ def is_html_content(page_raw: str, content_type: str) -> bool:
     return "<html" in page_raw[:100] or "text/html" in content_type or not content_type
 
 
-def format_documentation_result(url: str, content: str, start_index: int, max_length: int) -> str:
+def format_result(url: str, content: str, start_index: int, max_length: int, content_type: str = 'Documentation') -> str:
     """Format documentation result with pagination information.
 
     Args:
@@ -168,19 +168,19 @@ def format_documentation_result(url: str, content: str, start_index: int, max_le
     original_length = len(content)
 
     if start_index >= original_length:
-        return f"AWS Security Reference Architecture Documentation from {url}:\n\n<e>No more content available.</e>"
+        return f"AWS Security Reference Architecture {content_type} from {url}:\n\n<e>No more content available.</e>"
 
     # Calculate the end index, ensuring we don't go beyond the content length
     end_index = min(start_index + max_length, original_length)
     truncated_content = content[start_index:end_index]
 
     if not truncated_content:
-        return f"AWS Security Reference Architecture Documentation from {url}:\n\n<e>No more content available.</e>"
+        return f"AWS Security Reference Architecture {content_type} from {url}:\n\n<e>No more content available.</e>"
 
     actual_content_length = len(truncated_content)
     remaining_content = original_length - (start_index + actual_content_length)
 
-    result = f"AWS Security Reference Architecture Documentation from {url}:\n\n{truncated_content}"
+    result = f"AWS Security Reference Architecture {content_type} from {url}:\n\n{truncated_content}"
 
     # Only add the prompt to continue fetching if there is still remaining content
     if remaining_content > 0:

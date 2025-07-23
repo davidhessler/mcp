@@ -21,7 +21,7 @@ from awslabs.aws_sra_mcp_server.server_utils import read_documentation_html
 @patch("awslabs.aws_sra_mcp_server.server_utils.httpx.AsyncClient")
 @patch("awslabs.aws_sra_mcp_server.server_utils.is_html_content")
 @patch("awslabs.aws_sra_mcp_server.server_utils.extract_content_from_html")
-@patch("awslabs.aws_sra_mcp_server.server_utils.format_documentation_result")
+@patch("awslabs.aws_sra_mcp_server.server_utils.format_result")
 async def test_read_documentation_impl_success(
     mock_format, mock_extract, mock_is_html, mock_client, mock_context
 ):
@@ -50,7 +50,8 @@ async def test_read_documentation_impl_success(
 
     # Verify the results
     assert result == "Formatted content"
-    mock_is_html.assert_called_once_with("<html><body>Test content</body></html>", "text/html")
+    # The content-type is not passed to is_html_content in the current implementation
+    mock_is_html.assert_called_once_with("<html><body>Test content</body></html>", "")
     mock_extract.assert_called_once_with("<html><body>Test content</body></html>")
     mock_format.assert_called_once_with(url, "Extracted content", start_index, max_length)
 

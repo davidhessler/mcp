@@ -16,6 +16,20 @@ import os
 import pytest
 from unittest.mock import patch, AsyncMock
 from awslabs.aws_sra_mcp_server.util import extract_content_from_html
+from awslabs.aws_sra_mcp_server.server import MCP
+from fastmcp import Client
+
+@pytest.fixture
+def client():
+    return Client(MCP)
+
+async def call_tool(client: Client, tool, **kwargs):
+    """Helper function to call an MCP tool as an integration test"""
+    result = await client.call_tool(tool, kwargs)
+    # Extract the text content from the result
+    if hasattr(result, 'content') and len(result.content) > 0:
+        return result.content[0].text
+    return result
 
 
 def test_extract_content_from_html_with_sample():
@@ -43,8 +57,8 @@ def test_extract_content_from_html_with_sample():
 
 
 @pytest.mark.asyncio
-@patch("awslabs.aws_sra_mcp_server.server.read_documentation_impl")
-async def test_read_documentation_with_pagination(mock_read_impl, mock_context):
+@patch("awslabs.aws_sra_mcp_server.server.read_documentation_html")
+async def test_read_documentation_with_pagination(mock_read_impl, client):
     """Test read_documentation with pagination."""
 
     # Setup mock to return different content for different start indices
@@ -58,25 +72,24 @@ async def test_read_documentation_with_pagination(mock_read_impl, mock_context):
 
     mock_read_impl.side_effect = mock_impl
 
-    from awslabs.aws_sra_mcp_server.server import read_documentation
+    async with client:
+        # First call with start_index=0
+        result1 = await call_tool(
+            client, "read_security_and_compliance_best_practices_content", url="https://docs.aws.amazon.com/test.html", max_length=10, start_index=0
+        )
+        assert "Part 1" in result1
+        assert "start_index=6" in result1
 
-    # First call with start_index=0
-    result1 = await read_documentation(
-        mock_context, "https://docs.aws.amazon.com/test.html", max_length=10, start_index=0
-    )
-    assert "Part 1" in result1
-    assert "start_index=6" in result1
+        # Second call with start_index=6
+        result2 = await call_tool(
+            client, "read_security_and_compliance_best_practices_content", url="https://docs.aws.amazon.com/test.html", max_length=10, start_index=6
+        )
+        assert "Part 2" in result2
+        assert "start_index=12" in result2
 
-    # Second call with start_index=6
-    result2 = await read_documentation(
-        mock_context, "https://docs.aws.amazon.com/test.html", max_length=10, start_index=6
-    )
-    assert "Part 2" in result2
-    assert "start_index=12" in result2
-
-    # Third call with start_index=12
-    result3 = await read_documentation(
-        mock_context, "https://docs.aws.amazon.com/test.html", max_length=10, start_index=12
-    )
-    assert "Part 3" in result3
-    assert "Content truncated" not in result3
+        # Third call with start_index=12
+        result3 = await call_tool(
+            client, "read_security_and_compliance_best_practices_content", url="https://docs.aws.amazon.com/test.html", max_length=10, start_index=12
+        )
+        assert "Part 3" in result3
+        assert "Content truncated" not in result3

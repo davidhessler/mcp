@@ -22,7 +22,7 @@ from awslabs.aws_sra_mcp_server.github import (
 
 @pytest.mark.asyncio
 @patch("awslabs.aws_sra_mcp_server.github.httpx.AsyncClient")
-async def test_search_github(mock_client):
+async def test_search_github(mock_client, mock_context):
     """Test the search_github function."""
     # Setup mock responses for code search
     mock_code_response = MagicMock()
@@ -64,7 +64,7 @@ async def test_search_github(mock_client):
     mock_client.return_value = mock_client_instance
     
     # Call the function
-    results = await search_github("security", limit=10)
+    results = await search_github(mock_context, "security", limit=10)
     
     # Verify the results
     assert len(results) >= 1
@@ -98,7 +98,7 @@ async def test_sra_repositories_constant():
 
 @pytest.mark.asyncio
 @patch("awslabs.aws_sra_mcp_server.github.httpx.AsyncClient")
-async def test_search_github_with_token(mock_client):
+async def test_search_github_with_token(mock_client, mock_context):
     """Test the search_github function with GitHub token."""
     # Setup mock response
     mock_response = MagicMock()
@@ -111,7 +111,7 @@ async def test_search_github_with_token(mock_client):
     mock_client.return_value = mock_client_instance
     
     # Call the function with a token
-    await search_github("security", limit=10, github_token="test-token")
+    await search_github(mock_context, "security", limit=10, github_token="test-token")
     
     # Verify that the Authorization header was set
     calls = mock_client_instance.__aenter__.return_value.get.call_args_list
@@ -123,7 +123,7 @@ async def test_search_github_with_token(mock_client):
 
 @pytest.mark.asyncio
 @patch("awslabs.aws_sra_mcp_server.github.httpx.AsyncClient")
-async def test_search_github_error_handling(mock_client):
+async def test_search_github_error_handling(mock_client, mock_context):
     """Test error handling in search_github function."""
     # Setup mock client to raise an exception
     mock_client_instance = AsyncMock()
@@ -131,7 +131,7 @@ async def test_search_github_error_handling(mock_client):
     mock_client.return_value = mock_client_instance
     
     # Call the function - it should handle errors gracefully
-    results = await search_github("security", limit=10)
+    results = await search_github(mock_context, "security", limit=10)
     
     # Should return empty list when errors occur
     assert isinstance(results, list)

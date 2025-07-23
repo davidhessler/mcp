@@ -10,7 +10,9 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
 authors = [
-    { name = "Amazon Web Services", email = "aws-mcp-servers@amazon.com" },
+    { name = "Amazon Web Services" },
+    { name = "AWSLabs MCP", email="203918161+awslabs-mcp@users.noreply.github.com"},
+    { name = "MCP SRA Team", email="aws-sra-mcp-server@amazon.com"}
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -32,7 +34,8 @@ dependencies = [
     "loguru",
     "mcp",
     "pydantic",
-    "markdownify"
+    "markdownify",
+    "tenacity>=9.1.2",
 ]
 
 [project.optional-dependencies]

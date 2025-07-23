@@ -15,7 +15,7 @@ import httpx
 from awslabs.aws_sra_mcp_server import DEFAULT_USER_AGENT
 from awslabs.aws_sra_mcp_server.util import (
     extract_content_from_html,
-    format_documentation_result,
+    format_result,
     is_html_content,
 )
 from importlib.metadata import version
@@ -31,7 +31,16 @@ except Exception:
 
 
 async def _fetch_url(ctx: Context, url_str: str, session_uuid: str) -> tuple[str, Optional[str]]:
-    """Fetch URL content and return (content, error_msg)."""
+    """Fetch URL content and return (content, error_msg).
+    
+    Args:
+        ctx: MCP context for logging and error handling
+        url_str: URL to fetch content from
+        session_uuid: Session UUID for tracking requests
+        
+    Returns:
+        Tuple containing (content, error_message)
+    """
     logger.debug(f"Fetching documentation from {url_str}")
     
     url_with_session = f"{url_str}?session={session_uuid}"
@@ -62,8 +71,14 @@ async def _fetch_url(ctx: Context, url_str: str, session_uuid: str) -> tuple[str
         return response.text, None
 
 
-def _log_truncation(content: str, start_index: int, max_length: int) -> None:
-    """Log if content was truncated."""
+def log_truncation(content: str, start_index: int, max_length: int) -> None:
+    """Log if content was truncated.
+    
+    Args:
+        content: The content string to check
+        start_index: Starting character index
+        max_length: Maximum length of content to return
+    """
     if len(content) > start_index + max_length:
         logger.debug(
             f"Content truncated at {start_index + max_length} of {len(content)} characters"
@@ -78,32 +93,68 @@ async def _read_documentation_base(
     session_uuid: str,
     content_processor: Callable[[str, str], str],
 ) -> str:
-    """Base function for reading documentation with custom content processing."""
+    """Base function for reading documentation with custom content processing.
+    
+    Args:
+        ctx: MCP context for logging and error handling
+        url_str: URL to fetch content from
+        max_length: Maximum number of characters to return
+        start_index: Starting character index for pagination
+        session_uuid: Session UUID for tracking requests
+        content_processor: Function to process the raw content
+        
+    Returns:
+        Processed documentation content
+    """
     raw_content, error_msg = await _fetch_url(ctx, url_str, session_uuid)
     if error_msg:
         return error_msg
 
     content = content_processor(raw_content, "")
-    result = format_documentation_result(url_str, content, start_index, max_length)
-    _log_truncation(content, start_index, max_length)
+    result = format_result(url_str, content, start_index, max_length)
+    log_truncation(content, start_index, max_length)
     
     return result
 
 
 def _process_html_content(raw_content: str, content_type: str) -> str:
-    """Process HTML content by extracting text if it's HTML."""
+    """Process HTML content by extracting text if it's HTML.
+    
+    Args:
+        raw_content: Raw HTML content to process
+        content_type: Content type header value
+        
+    Returns:
+        Extracted text content from HTML
+    """
     if is_html_content(raw_content, content_type):
         return extract_content_from_html(raw_content)
     return raw_content
 
 
 def _process_markdown_content(raw_content: str, content_type: str) -> str:
-    """Process markdown content (no processing needed)."""
+    """Process markdown content (no processing needed).
+    
+    Args:
+        raw_content: Raw markdown content
+        content_type: Content type header value
+        
+    Returns:
+        Unmodified markdown content
+    """
     return raw_content
 
 
 def _process_code_content(raw_content: str, content_type: str) -> str:
-    """Process code content by wrapping in code blocks."""
+    """Process code content by wrapping in code blocks.
+    
+    Args:
+        raw_content: Raw code content
+        content_type: Content type header value
+        
+    Returns:
+        Code content wrapped in markdown code blocks
+    """
     return f'```\n{raw_content}\n```'
 
 
@@ -133,7 +184,7 @@ async def read_documentation_markdown(
     )
 
 
-async def read_code(
+async def read_other(
     ctx: Context,
     url_str: str,
     max_length: int,

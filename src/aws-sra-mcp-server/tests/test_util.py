@@ -14,7 +14,7 @@
 
 from awslabs.aws_sra_mcp_server.util import (
     is_html_content,
-    format_documentation_result,
+    format_result,
     parse_recommendation_results,
 )
 
@@ -35,24 +35,24 @@ def test_format_documentation_result():
     content = "This is a test content for the AWS Security Reference Architecture."
 
     # Test with normal content
-    result = format_documentation_result(url, content, 0, 100)
+    result = format_result(url, content, 0, 100)
     assert url in result
     assert content in result
     assert "Content truncated" not in result
 
     # Test with truncated content
-    result = format_documentation_result(url, content, 0, 10)
+    result = format_result(url, content, 0, 10)
     assert url in result
     assert content[:10] in result
     assert "Content truncated" in result
 
     # Test with start index
-    result = format_documentation_result(url, content, 10, 100)
+    result = format_result(url, content, 10, 100)
     assert url in result
     assert content[10:] in result
 
     # Test with start index beyond content length
-    result = format_documentation_result(url, content, 100, 10)
+    result = format_result(url, content, 100, 10)
     assert url in result
     assert "No more content available" in result
 
