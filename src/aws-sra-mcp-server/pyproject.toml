@@ -29,7 +29,6 @@ dependencies = [
     "loguru>=0.7.0",
     "markdownify>=0.11.6",
     "mcp-server>=0.1.0",
-    "pygithub>=2.6.1",
     "fastmcp>2.10.0",
     "loguru",
     "mcp",
