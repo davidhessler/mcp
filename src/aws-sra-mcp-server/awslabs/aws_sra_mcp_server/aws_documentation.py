@@ -20,7 +20,6 @@ from typing import List, Dict, Any, Tuple
 from awslabs.aws_sra_mcp_server.models import SearchResult, RecommendationResult
 from awslabs.aws_sra_mcp_server import DEFAULT_USER_AGENT
 from fastmcp import Context
-from functools import partial
 from uuid import uuid4
 
 # API URLs
@@ -195,7 +194,7 @@ async def get_multiple_recommendations(ctx: Context, urls: List[str]) -> Dict[st
     
     # Create a client for AWS documentation recommendations
     #  amazonq-ignore-next-line
-    async with httpx.AsyncClient() as client:
+    async with AsyncClient() as client:
         try:
             # Execute requests in batches to avoid overwhelming the API
             for i in range(0, len(urls), MAX_CONCURRENT_REQUESTS):

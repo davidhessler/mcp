@@ -87,7 +87,7 @@ async def get_github_token(ctx: Context) -> str | None:
         try:
             result = await ctx.elicit(
                 message="GITHUB_TOKEN not set in environment variables. Provide a GITHUB_TOKEN.",
-                response_type=str,
+                response_type=str
             )
             match result:
                 case AcceptedElicitation(data=token):

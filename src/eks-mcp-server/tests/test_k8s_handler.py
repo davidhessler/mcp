@@ -64,7 +64,7 @@ class TestK8sHandler:
             handler = K8sHandler(mock_mcp, allow_write=True)
 
             # Verify that the handler has the correct attributes
-            assert handler.mcp == mock_mcp
+            assert handler.MCP == mock_mcp
             assert handler.client_cache == mock_client_cache
             assert handler.allow_write is True
             assert handler.allow_sensitive_data_access is False
@@ -95,7 +95,7 @@ class TestK8sHandler:
             handler = K8sHandler(mock_mcp, allow_write=False, allow_sensitive_data_access=True)
 
             # Verify that the handler has the correct attributes
-            assert handler.mcp == mock_mcp
+            assert handler.MCP == mock_mcp
             assert handler.client_cache == mock_client_cache
             assert handler.allow_write is False
             assert handler.allow_sensitive_data_access is True

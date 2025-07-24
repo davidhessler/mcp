@@ -47,7 +47,7 @@ class TestEksStackHandler:
         handler = EksStackHandler(mock_mcp)
 
         # Verify that the handler has the correct attributes
-        assert handler.mcp == mock_mcp
+        assert handler.MCP == mock_mcp
         assert handler.allow_write is False
 
         # Verify that the manage_eks_stacks tool was registered
@@ -64,7 +64,7 @@ class TestEksStackHandler:
         handler = EksStackHandler(mock_mcp, allow_write=False)
 
         # Verify that the handler has the correct attributes
-        assert handler.mcp == mock_mcp
+        assert handler.MCP == mock_mcp
         assert handler.allow_write is False
 
         # Verify that the manage_eks_stacks tool was registered

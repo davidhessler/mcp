@@ -20,7 +20,7 @@ from awslabs.aws_sra_mcp_server.util import (
 )
 from importlib.metadata import version
 from loguru import logger
-from mcp.server.fastmcp import Context
+from fastmcp import Context
 from typing import Callable, Optional
 
 

@@ -1,6 +1,7 @@
 from operator import truediv
 
 import pytest
+from mcp.types import TextContent
 
 from awslabs.aws_sra_mcp_server.server import MCP
 from fastmcp import Client
@@ -20,6 +21,7 @@ async def test_search_security_and_compliance_best_practices_content_unauthentic
             'https://github.com/aws-samples/aws-security-reference-architecture-examples/issues/233',
         ]
         found_urls = 0
+        assert isinstance(result.content[0], TextContent)
         for c in json.loads(result.content[0].text):
             if c['url'] in expected_url:
                 found_urls += 1
@@ -41,6 +43,7 @@ async def test_search_security_and_compliance_best_practices_content_authenticat
             'https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/architecture.html',
         ]
         found_urls = 0
+        assert isinstance(result.content[0], TextContent)
         for c in json.loads(result.content[0].text):
             if c['url'] in expected_url:
                 found_urls += 1
@@ -52,6 +55,7 @@ async def test_read_security_and_compliance_best_practices_content_prescriptive_
     async with client:
         result = await client.call_tool('read_security_and_compliance_best_practices_content', {"url": 'https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/security-tooling.html', 'start_index': 0})
         assert len(result.content) > 0
+        assert isinstance(result.content[0], TextContent)
         text_result = result.content[0].text
         assert text_result.startswith('AWS Security Reference Architecture Documentation')
 
@@ -61,6 +65,7 @@ async def test_read_security_and_compliance_best_practices_content_prescriptive_
     async with client:
         result = await client.call_tool('read_security_and_compliance_best_practices_content', {"url": 'https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/security-tooling.html', 'start_index': 99999})
         assert len(result.content) > 0
+        assert isinstance(result.content[0], TextContent)
         text_result = result.content[0].text
         assert 'No more content available' in text_result
 
@@ -70,6 +75,7 @@ async def test_read_security_and_compliance_best_practices_content_github_issues
     async with client:
         result = await client.call_tool('read_security_and_compliance_best_practices_content', {"url": 'https://github.com/aws-samples/aws-security-reference-architecture-examples/issues/225', 'start_index': 0})
         assert len(result.content) > 0
+        assert isinstance(result.content[0], TextContent)
         text_result = result.content[0].text
         assert text_result.startswith('AWS Security Reference Architecture GitHub Issue from https://github.com/aws-samples/aws-security-reference-architecture-examples/issues/225:\n\n')
 
@@ -80,6 +86,7 @@ async def test_read_security_and_compliance_best_practices_content_github_pr():
         url = 'https://github.com/aws-samples/aws-security-reference-architecture-examples/pull/167'
         result = await client.call_tool('read_security_and_compliance_best_practices_content', {"url": url, 'start_index': 0})
         assert len(result.content) > 0
+        assert isinstance(result.content[0], TextContent)
         text_result = result.content[0].text
         if text_result.startswith(f'AWS Security Reference Architecture Pull Request from {url}'):
             assert True
@@ -92,6 +99,7 @@ async def test_read_security_and_compliance_best_practices_content_github_code()
     async with client:
         result = await client.call_tool('read_security_and_compliance_best_practices_content', {"url": 'https://github.com/aws-samples/aws-security-reference-architecture-examples/blob/main/aws_sra_examples/modules/guardduty-org-module/templates/sra-guardduty-org-solution.yaml', 'start_index': 0})
         assert len(result.content) > 0
+        assert isinstance(result.content[0], TextContent)
         text_result = result.content[0].text
         assert '# SPDX-License-Identifier: MIT-0' in text_result
         assert 'Description: Installs the AWS SRA GuardDuty solution.  If needed, the AWS SRA common prerequisite solution is also installed.  (sra-1u3sd7f8m)' in text_result
@@ -101,6 +109,7 @@ async def test_recommendations():
     async with client:
         result = await client.call_tool('recommend', {"url": 'https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/security-tooling.html', 'limit': 10})
         assert len(result.content) > 0
+        assert isinstance(result.content[0], TextContent)
         json_result = json.loads(result.content[0].text)
         titles = [r['title'] for r in json_result]
         assert 'Security concepts and best practices for AWS' in titles

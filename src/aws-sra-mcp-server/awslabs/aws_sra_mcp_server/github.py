@@ -19,10 +19,10 @@ from awslabs.aws_sra_mcp_server.server_utils import (
 import httpx
 import asyncio
 import random
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
-from mcp.server.fastmcp import Context
+from fastmcp import Context
 
 from awslabs.aws_sra_mcp_server.models import SearchResult
 from awslabs.aws_sra_mcp_server.server_utils import log_truncation
@@ -140,7 +140,7 @@ async def _search_issues_or_prs(client: httpx.AsyncClient, repo: str, search_phr
     except Exception:
         return []
 
-async def search_github(ctx: Context, search_phrase: str, limit: int = 10, github_token: str = None) -> List[SearchResult]:
+async def search_github(ctx: Context, search_phrase: str, limit: int = 10, github_token: Optional[str] = None) -> List[SearchResult]:
     """
     Search GitHub repositories for AWS Security Reference Architecture content.
     
