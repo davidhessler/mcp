@@ -58,9 +58,11 @@ def client():
 @pytest.fixture
 async def call_tool():
     """Helper function to call an MCP tool as an integration test"""
+
     async def _call_tool(client, tool_name, **kwargs):
         params = {}
         for key, value in kwargs.items():
             params[key] = value
         return await client.call_tool(tool_name, params)
+
     return _call_tool

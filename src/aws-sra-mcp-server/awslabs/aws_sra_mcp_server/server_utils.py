@@ -32,19 +32,19 @@ except Exception:
 
 async def _fetch_url(ctx: Context, url_str: str, session_uuid: str) -> tuple[str, Optional[str]]:
     """Fetch URL content and return (content, error_msg).
-    
+
     Args:
         ctx: MCP context for logging and error handling
         url_str: URL to fetch content from
         session_uuid: Session UUID for tracking requests
-        
+
     Returns:
         Tuple containing (content, error_message)
     """
     logger.debug(f"Fetching documentation from {url_str}")
-    
+
     url_with_session = f"{url_str}?session={session_uuid}"
-    
+
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(
@@ -73,7 +73,7 @@ async def _fetch_url(ctx: Context, url_str: str, session_uuid: str) -> tuple[str
 
 def log_truncation(content: str, start_index: int, max_length: int) -> None:
     """Log if content was truncated.
-    
+
     Args:
         content: The content string to check
         start_index: Starting character index
@@ -94,7 +94,7 @@ async def _read_documentation_base(
     content_processor: Callable[[str, str], str],
 ) -> str:
     """Base function for reading documentation with custom content processing.
-    
+
     Args:
         ctx: MCP context for logging and error handling
         url_str: URL to fetch content from
@@ -102,7 +102,7 @@ async def _read_documentation_base(
         start_index: Starting character index for pagination
         session_uuid: Session UUID for tracking requests
         content_processor: Function to process the raw content
-        
+
     Returns:
         Processed documentation content
     """
@@ -113,17 +113,17 @@ async def _read_documentation_base(
     content = content_processor(raw_content, "")
     result = format_result(url_str, content, start_index, max_length)
     log_truncation(content, start_index, max_length)
-    
+
     return result
 
 
 def _process_html_content(raw_content: str, content_type: str) -> str:
     """Process HTML content by extracting text if it's HTML.
-    
+
     Args:
         raw_content: Raw HTML content to process
         content_type: Content type header value
-        
+
     Returns:
         Extracted text content from HTML
     """
@@ -134,11 +134,11 @@ def _process_html_content(raw_content: str, content_type: str) -> str:
 
 def _process_markdown_content(raw_content: str, content_type: str) -> str:
     """Process markdown content (no processing needed).
-    
+
     Args:
         raw_content: Raw markdown content
         content_type: Content type header value
-        
+
     Returns:
         Unmodified markdown content
     """
@@ -147,15 +147,15 @@ def _process_markdown_content(raw_content: str, content_type: str) -> str:
 
 def _process_code_content(raw_content: str, content_type: str) -> str:
     """Process code content by wrapping in code blocks.
-    
+
     Args:
         raw_content: Raw code content
         content_type: Content type header value
-        
+
     Returns:
         Code content wrapped in markdown code blocks
     """
-    return f'```\n{raw_content}\n```'
+    return f"```\n{raw_content}\n```"
 
 
 async def read_documentation_html(

@@ -17,6 +17,7 @@ import markdownify
 from awslabs.aws_sra_mcp_server.models import RecommendationResult
 from typing import Any, Dict, List
 
+
 def extract_content_from_html(html: str) -> str:
     """Extract and convert HTML content to Markdown format.
 
@@ -153,7 +154,9 @@ def is_html_content(page_raw: str, content_type: str) -> bool:
     return "<html" in page_raw[:100] or "text/html" in content_type or not content_type
 
 
-def format_result(url: str, content: str, start_index: int, max_length: int, content_type: str = 'Documentation') -> str:
+def format_result(
+    url: str, content: str, start_index: int, max_length: int, content_type: str = "Documentation"
+) -> str:
     """Format documentation result with pagination information.
 
     Args:
@@ -180,7 +183,9 @@ def format_result(url: str, content: str, start_index: int, max_length: int, con
     actual_content_length = len(truncated_content)
     remaining_content = original_length - (start_index + actual_content_length)
 
-    result = f"AWS Security Reference Architecture {content_type} from {url}:\n\n{truncated_content}"
+    result = (
+        f"AWS Security Reference Architecture {content_type} from {url}:\n\n{truncated_content}"
+    )
 
     # Only add the prompt to continue fetching if there is still remaining content
     if remaining_content > 0:

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """AWS Documentation search functionality for AWS Security Reference Architecture MCP Server."""
+
 from http.client import responses
 
 from httpx import AsyncClient
@@ -31,6 +32,7 @@ SESSION_UUID = str(uuid4())
 # Maximum number of concurrent requests
 MAX_CONCURRENT_REQUESTS = 5
 
+
 def parse_recommendation_results(data: Dict[str, Any]) -> List[RecommendationResult]:
     """Parse recommendation API response into RecommendationResult objects.
 
@@ -47,28 +49,36 @@ def parse_recommendation_results(data: Dict[str, Any]) -> List[RecommendationRes
             context = context_generator(item)
             results.append(
                 RecommendationResult(
-                    url=item.get('url', ''),
-                    title=item.get('assetTitle', ''),
-                    context=context
+                    url=item.get("url", ""), title=item.get("assetTitle", ""), context=context
                 )
             )
 
-    if 'highlyRated' in data and 'items' in data['highlyRated']:
-        process_items(data['highlyRated']['items'], lambda item: item.get('abstract'))
+    if "highlyRated" in data and "items" in data["highlyRated"]:
+        process_items(data["highlyRated"]["items"], lambda item: item.get("abstract"))
 
-    if 'journey' in data and 'items' in data['journey']:
-        for intent_group in data['journey']['items']:
-            intent = intent_group.get('intent', '')
-            if 'urls' in intent_group:
-                process_items(intent_group['urls'], lambda _: f'Intent: {intent}' if intent else None)
+    if "journey" in data and "items" in data["journey"]:
+        for intent_group in data["journey"]["items"]:
+            intent = intent_group.get("intent", "")
+            if "urls" in intent_group:
+                process_items(
+                    intent_group["urls"], lambda _: f"Intent: {intent}" if intent else None
+                )
 
-    if 'new' in data and 'items' in data['new']:
-        process_items(data['new']['items'], lambda item: f'New content added on {item.get("dateCreated", "")}' if item.get('dateCreated') else 'New content')
+    if "new" in data and "items" in data["new"]:
+        process_items(
+            data["new"]["items"],
+            lambda item: f"New content added on {item.get('dateCreated', '')}"
+            if item.get("dateCreated")
+            else "New content",
+        )
 
-    if 'similar' in data and 'items' in data['similar']:
-        process_items(data['similar']['items'], lambda item: item.get('abstract', 'Similar content'))
+    if "similar" in data and "items" in data["similar"]:
+        process_items(
+            data["similar"]["items"], lambda item: item.get("abstract", "Similar content")
+        )
 
     return results
+
 
 def parse_search_results(data: Dict[str, Any], limit: int = 10) -> List[SearchResult]:
     """
@@ -81,35 +91,38 @@ def parse_search_results(data: Dict[str, Any], limit: int = 10) -> List[SearchRe
     return [
         SearchResult(
             rank_order=i + 1,
-            url=suggestion['textExcerptSuggestion'].get('link', ''),
-            title=suggestion['textExcerptSuggestion'].get('title', ''),
-            context=suggestion['textExcerptSuggestion'].get('summary') or
-                    suggestion['textExcerptSuggestion'].get('suggestionBody') or
-                    suggestion['textExcerptSuggestion'].get('context', '')
+            url=suggestion["textExcerptSuggestion"].get("link", ""),
+            title=suggestion["textExcerptSuggestion"].get("title", ""),
+            context=suggestion["textExcerptSuggestion"].get("summary")
+            or suggestion["textExcerptSuggestion"].get("suggestionBody")
+            or suggestion["textExcerptSuggestion"].get("context", ""),
         )
-        for i, suggestion in enumerate(data.get('suggestions', [])[:limit])
-        if 'textExcerptSuggestion' in suggestion
+        for i, suggestion in enumerate(data.get("suggestions", [])[:limit])
+        if "textExcerptSuggestion" in suggestion
     ]
+
 
 async def _execute_search_request(client: AsyncClient, search_phrase: str) -> Dict[str, Any]:
     """Execute a search request to AWS documentation API."""
     request_body = {
-        'textQuery': {
-            'input': search_phrase,
+        "textQuery": {
+            "input": search_phrase,
         },
-        'contextAttributes': [{'key':'aws-docs-search-guide', 'value': 'AWS Security Reference Architecture'}], # Limits to SRA Docs only
-        'acceptSuggestionBody': 'RawText',
-        'locales': ['en_us'],
+        "contextAttributes": [
+            {"key": "aws-docs-search-guide", "value": "AWS Security Reference Architecture"}
+        ],  # Limits to SRA Docs only
+        "acceptSuggestionBody": "RawText",
+        "locales": ["en_us"],
     }
 
-    search_url_with_session = f'{SEARCH_API_URL}?session={SESSION_UUID}'
+    search_url_with_session = f"{SEARCH_API_URL}?session={SESSION_UUID}"
 
     headers = {
-        'Content-Type': 'application/json',
-        'User-Agent': DEFAULT_USER_AGENT,
-        'X-MCP-Session-Id': SESSION_UUID,
+        "Content-Type": "application/json",
+        "User-Agent": DEFAULT_USER_AGENT,
+        "X-MCP-Session-Id": SESSION_UUID,
     }
-    
+
     try:
         response = await client.post(search_url_with_session, json=request_body, headers=headers)
         response.raise_for_status()
@@ -117,11 +130,12 @@ async def _execute_search_request(client: AsyncClient, search_phrase: str) -> Di
     except Exception:
         return {}
 
+
 async def _execute_recommendation_request(client: AsyncClient, url: str) -> Dict[str, Any]:
     """Execute a recommendation request to AWS documentation API."""
-    recommendation_url = f'{RECOMMENDATIONS_API_URL}?path={url}&session={SESSION_UUID}'
+    recommendation_url = f"{RECOMMENDATIONS_API_URL}?path={url}&session={SESSION_UUID}"
     headers = {"User-Agent": DEFAULT_USER_AGENT}
-    
+
     try:
         response = await client.get(recommendation_url, headers=headers)
         response.raise_for_status()
@@ -129,19 +143,18 @@ async def _execute_recommendation_request(client: AsyncClient, url: str) -> Dict
     except Exception:
         return {}
 
+
 async def search_sra_documentation(
-        ctx: Context,
-        search_phrase: str,
-        limit: int = 10
+    ctx: Context, search_phrase: str, limit: int = 10
 ) -> List[SearchResult]:
     """
     Search SRA documentation
-    
+
     Args:
         ctx: MCP context for logging and error handling
         search_phrase: Search phrase to use
         limit: Maximum number of results to return
-        
+
     Returns:
         List of search results from AWS documentation
     """
@@ -156,19 +169,20 @@ async def search_sra_documentation(
             await ctx.error(f"Error searching AWS documentation: {e}")
             return []
 
+
 async def get_recommendations(ctx: Context, url: str) -> List[RecommendationResult]:
     """
     Get content recommendations for an AWS documentation page.
-    
+
     Args:
         ctx: MCP context for logging and error handling
         url: URL of the AWS documentation page
-        
+
     Returns:
         List of recommended pages
     """
     await ctx.debug(f"Getting recommendations for: {url}")
-    
+
     # Create a client for AWS documentation recommendations
     async with AsyncClient() as client:
         try:
@@ -178,35 +192,38 @@ async def get_recommendations(ctx: Context, url: str) -> List[RecommendationResu
             await ctx.error(f"Error getting recommendations: {e}")
             return []
 
-async def get_multiple_recommendations(ctx: Context, urls: List[str]) -> Dict[str, List[RecommendationResult]]:
+
+async def get_multiple_recommendations(
+    ctx: Context, urls: List[str]
+) -> Dict[str, List[RecommendationResult]]:
     """
     Get content recommendations for multiple AWS documentation pages concurrently.
-    
+
     Args:
         ctx: MCP context for logging and error handling
         urls: List of URLs to get recommendations for
-        
+
     Returns:
         Dictionary mapping URLs to their recommendation results
     """
     await ctx.debug(f"Getting recommendations for {len(urls)} URLs")
-    
+
     results = {}
-    
+
     # Create a client for AWS documentation recommendations
     #  amazonq-ignore-next-line
     async with httpx.AsyncClient() as client:
         try:
             # Execute requests in batches to avoid overwhelming the API
             for i in range(0, len(urls), MAX_CONCURRENT_REQUESTS):
-                batch = urls[i:i+MAX_CONCURRENT_REQUESTS]
+                batch = urls[i : i + MAX_CONCURRENT_REQUESTS]
                 batch_tasks = [_execute_recommendation_request(client, url) for url in batch]
                 batch_results = await gather(*batch_tasks)
-                
+
                 # Process results for this batch
                 for url, data in zip(batch, batch_results):
                     results[url] = parse_recommendation_results(data)
-                    
+
             return results
         except Exception as e:
             await ctx.error(f"Error getting multiple recommendations: {e}")

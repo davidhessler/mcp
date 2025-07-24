@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """GitHub search functionality for AWS Security Reference Architecture MCP Server."""
-from awslabs.aws_sra_mcp_server.server_utils import (
-    read_documentation_html
-)
+
+from awslabs.aws_sra_mcp_server.server_utils import read_documentation_html
 
 import httpx
 import asyncio
@@ -33,22 +32,26 @@ GITHUB_API_URL = "https://api.github.com"
 
 # SRA GitHub repositories to search
 SRA_REPOSITORIES = [
-    'awslabs/sra-verify',
-    'aws-samples/aws-security-reference-architecture-examples'
+    "awslabs/sra-verify",
+    "aws-samples/aws-security-reference-architecture-examples",
 ]
+
 
 # Define retry decorator for HTTP requests
 @retry(
     retry=retry_if_exception_type((httpx.HTTPError, httpx.NetworkError, httpx.TimeoutException)),
     stop=stop_after_attempt(5),
     wait=wait_exponential(multiplier=1, min=1, max=60),
-    before_sleep=lambda retry_state: random.uniform(0, 1)  # Add jitter
+    before_sleep=lambda retry_state: random.uniform(0, 1),  # Add jitter
 )
 async def _http_get_with_retry(client: httpx.AsyncClient, url: str, **kwargs) -> httpx.Response:
     """Make an HTTP GET request with exponential backoff retry logic."""
     return await client.get(url, **kwargs)
 
-async def __get_commits_str(ctx: Context, repo_owner: str, repo_name: str, commit_shas: List[str]) -> str:
+
+async def __get_commits_str(
+    ctx: Context, repo_owner: str, repo_name: str, commit_shas: List[str]
+) -> str:
     """
     Get commit details as a formatted string.
 
@@ -61,7 +64,7 @@ async def __get_commits_str(ctx: Context, repo_owner: str, repo_name: str, commi
     Returns:
         Formatted string with commit details
     """
-    parts = ['\n\n## Commits\n\nBelow is information on commits\n\n']
+    parts = ["\n\n## Commits\n\nBelow is information on commits\n\n"]
     try:
         async with httpx.AsyncClient() as client:
             for sha in commit_shas:
@@ -69,19 +72,20 @@ async def __get_commits_str(ctx: Context, repo_owner: str, repo_name: str, commi
                 response = await _http_get_with_retry(client, commit_url)
                 response.raise_for_status()
                 commit_data = response.json()
-                parts.append(f'### {commit_data["commit"]["message"]}\n\n')
-                if 'files' in commit_data:
-                    for file in commit_data['files']:
-                        parts.append(f'**{file["filename"]}:**\n\n')
-                        parts.append('```\n')
-                        parts.append(f'{file["patch"]}\n')
-                        parts.append('```\n\n')
+                parts.append(f"### {commit_data['commit']['message']}\n\n")
+                if "files" in commit_data:
+                    for file in commit_data["files"]:
+                        parts.append(f"**{file['filename']}:**\n\n")
+                        parts.append("```\n")
+                        parts.append(f"{file['patch']}\n")
+                        parts.append("```\n\n")
                 else:
-                    parts.append('No files were changed')
-            return ''.join(parts)
+                    parts.append("No files were changed")
+            return "".join(parts)
     except Exception as e:
         await ctx.error(f"Error getting commit details: {e}")
-        return ''
+        return ""
+
 
 async def __get_comments_str(ctx: Context, comment_url: str) -> str:
     """
@@ -96,65 +100,83 @@ async def __get_comments_str(ctx: Context, comment_url: str) -> str:
     """
     async with httpx.AsyncClient() as client:
         try:
-            parts = ['\n\n## Comments\n\nBelow is information on comments\n\n']
+            parts = ["\n\n## Comments\n\nBelow is information on comments\n\n"]
             response = await _http_get_with_retry(client, comment_url)
             response.raise_for_status()
             comments_data = response.json()
             for d in comments_data:
-                parts.append(f'{d["user"]["login"]}: {d["body"]}\n\n')
-            return ''.join(parts)
+                parts.append(f"{d['user']['login']}: {d['body']}\n\n")
+            return "".join(parts)
         except Exception as e:
             await ctx.error(f"Error getting comment details: {e}")
-            return ''
+            return ""
 
-async def _search_code(client: httpx.AsyncClient, repo: str, search_phrase: str, limit: int, headers: Dict[str, str]) -> List[Dict[str, Any]]:
+
+async def _search_code(
+    client: httpx.AsyncClient, repo: str, search_phrase: str, limit: int, headers: Dict[str, str]
+) -> List[Dict[str, Any]]:
     """Search code in a GitHub repository."""
     code_search_url = f"{GITHUB_API_URL}/search/code"
     params = {
         "q": f"{search_phrase} repo:{repo}",
-        "per_page": (limit // 2)  # Split limit between repositories
+        "per_page": (limit // 2),  # Split limit between repositories
     }
-    
+
     try:
-        response = await _http_get_with_retry(client, code_search_url, params=params, headers=headers)
+        response = await _http_get_with_retry(
+            client, code_search_url, params=params, headers=headers
+        )
         response.raise_for_status()
         data = response.json()
         return data.get("items", [])
     except Exception:
         return []
 
-async def _search_issues_or_prs(client: httpx.AsyncClient, repo: str, search_phrase: str, limit: int, headers: Dict[str, str], is_pr: bool) -> List[Dict[str, Any]]:
+
+async def _search_issues_or_prs(
+    client: httpx.AsyncClient,
+    repo: str,
+    search_phrase: str,
+    limit: int,
+    headers: Dict[str, str],
+    is_pr: bool,
+) -> List[Dict[str, Any]]:
     """Search issues or PRs in a GitHub repository."""
     issues_search_url = f"{GITHUB_API_URL}/search/issues"
     item_type = "is:pr" if is_pr else "is:issue"
     params = {
         "q": f"{search_phrase} repo:{repo} {item_type}",
-        "per_page": (limit // 2)  # Split limit between repositories
+        "per_page": (limit // 2),  # Split limit between repositories
     }
-    
+
     try:
-        response = await _http_get_with_retry(client, issues_search_url, params=params, headers=headers)
+        response = await _http_get_with_retry(
+            client, issues_search_url, params=params, headers=headers
+        )
         response.raise_for_status()
         data = response.json()
         return data.get("items", [])
     except Exception:
         return []
 
-async def search_github(ctx: Context, search_phrase: str, limit: int = 10, github_token: str = None) -> List[SearchResult]:
+
+async def search_github(
+    ctx: Context, search_phrase: str, limit: int = 10, github_token: str = None
+) -> List[SearchResult]:
     """
     Search GitHub repositories for AWS Security Reference Architecture content.
-    
+
     Args:
         ctx: MCP context for logging and error handling
         search_phrase: Search phrase to use
         limit: Maximum number of results to return
         github_token: Optional GitHub access token for authentication
-        
+
     Returns:
         List of search results from GitHub repositories
     """
     results = []
-    
+
     # Create a client for GitHub API requests
     async with httpx.AsyncClient() as client:
         # Set up headers with authorization if token is provided
@@ -168,7 +190,7 @@ async def search_github(ctx: Context, search_phrase: str, limit: int = 10, githu
                 code_items, issue_items, pr_items = await asyncio.gather(
                     _search_code(client, repo, search_phrase, limit, headers),
                     _search_issues_or_prs(client, repo, search_phrase, limit, headers, is_pr=False),
-                    _search_issues_or_prs(client, repo, search_phrase, limit, headers, is_pr=True)
+                    _search_issues_or_prs(client, repo, search_phrase, limit, headers, is_pr=True),
                 )
 
                 # Process code search results
@@ -177,7 +199,7 @@ async def search_github(ctx: Context, search_phrase: str, limit: int = 10, githu
                         rank_order=i + 1,
                         url=item.get("html_url", ""),
                         title=f"[Code] {item.get('name', '')} - {repo}",
-                        context=item.get("path", "")
+                        context=item.get("path", ""),
                     )
                     results.append(result)
 
@@ -187,7 +209,9 @@ async def search_github(ctx: Context, search_phrase: str, limit: int = 10, githu
                         rank_order=i + len(results) + 1,
                         url=item.get("html_url", ""),
                         title=f"[Issue] {item.get('title', '')} - {repo}",
-                        context=item.get("body", "")[:200] + "..." if item.get("body") and len(item.get("body")) > 200 else item.get("body", "")
+                        context=item.get("body", "")[:200] + "..."
+                        if item.get("body") and len(item.get("body")) > 200
+                        else item.get("body", ""),
                     )
                     results.append(result)
 
@@ -197,10 +221,12 @@ async def search_github(ctx: Context, search_phrase: str, limit: int = 10, githu
                         rank_order=i + len(results) + 1,
                         url=item.get("html_url", ""),
                         title=f"[PR] {item.get('title', '')} - {repo}",
-                        context=item.get("body", "")[:200] + "..." if item.get("body") and len(item.get("body")) > 200 else item.get("body", "")
+                        context=item.get("body", "")[:200] + "..."
+                        if item.get("body") and len(item.get("body")) > 200
+                        else item.get("body", ""),
                     )
                     results.append(result)
-                    
+
             except Exception as e:
                 await ctx.error(f"Error searching GitHub repository {repo}: {e}")
 
@@ -208,7 +234,10 @@ async def search_github(ctx: Context, search_phrase: str, limit: int = 10, githu
     results.sort(key=lambda x: x.rank_order)
     return results[:limit]
 
-async def get_issue_markdown(ctx: Context, issue_url: str, max_length: int, start_index: int) -> str:
+
+async def get_issue_markdown(
+    ctx: Context, issue_url: str, max_length: int, start_index: int
+) -> str:
     """
     Fetches the content of a GitHub Issue url and converts it to Markdown.
 
@@ -228,7 +257,7 @@ async def get_issue_markdown(ctx: Context, issue_url: str, max_length: int, star
     repo = sp[4]
     issue_number = sp[-1]
 
-    url = f'{GITHUB_API_URL}/repos/{owner}/{repo}/issues/{issue_number}'
+    url = f"{GITHUB_API_URL}/repos/{owner}/{repo}/issues/{issue_number}"
 
     # Create a client for GitHub API requests
     async with httpx.AsyncClient() as client:
@@ -237,28 +266,29 @@ async def get_issue_markdown(ctx: Context, issue_url: str, max_length: int, star
             response.raise_for_status()
 
             data = response.json()
-            title = data['title']
-            body = data['body']
-            parts = [f'# Issue: {title}\n\n{body}']
-            number_of_comments = data['comments']
+            title = data["title"]
+            body = data["body"]
+            parts = [f"# Issue: {title}\n\n{body}"]
+            number_of_comments = data["comments"]
             if number_of_comments > 0:
-                comment_url = f'{url}/comments'
+                comment_url = f"{url}/comments"
                 comments = await __get_comments_str(ctx, comment_url)
                 parts.append(comments)
-            content = ''.join(parts)
+            content = "".join(parts)
             log_truncation(content, start_index=start_index, max_length=max_length)
             return format_result(
                 url=issue_url,
                 content=content,
                 start_index=start_index,
                 max_length=max_length,
-                content_type='GitHub Issue'
+                content_type="GitHub Issue",
             )
         except Exception as e:
             await ctx.error(f"Error getting issue details: {e}")
-            return ''
+            return ""
 
-async def get_pr_markdown(ctx: Context, pr_url:str, max_length: int, start_index: int) -> str:
+
+async def get_pr_markdown(ctx: Context, pr_url: str, max_length: int, start_index: int) -> str:
     """
     Fetches the content of a GitHub PR url and converts it to Markdown.
 
@@ -277,7 +307,7 @@ async def get_pr_markdown(ctx: Context, pr_url:str, max_length: int, start_index
     repo = sp[4]
     pr_number = sp[-1]
 
-    url = f'{GITHUB_API_URL}/repos/{owner}/{repo}/pulls/{pr_number}'
+    url = f"{GITHUB_API_URL}/repos/{owner}/{repo}/pulls/{pr_number}"
 
     async with httpx.AsyncClient() as client:
         try:
@@ -285,42 +315,42 @@ async def get_pr_markdown(ctx: Context, pr_url:str, max_length: int, start_index
             response.raise_for_status()
             data = response.json()
 
-            title = data['title']
-            body = data['body']
-            parts = [f'# Pull Request: {title}\n\n{body}']
-            number_of_commits = data['commits']
-            number_of_comments = data['comments']
+            title = data["title"]
+            body = data["body"]
+            parts = [f"# Pull Request: {title}\n\n{body}"]
+            number_of_commits = data["commits"]
+            number_of_comments = data["comments"]
 
             if number_of_commits > 0:
-                commit_response = await client.get(f'{url}/commits')
+                commit_response = await client.get(f"{url}/commits")
                 commit_response.raise_for_status()
                 commit_data = commit_response.json()
-                shas = [commit['sha'] for commit in commit_data]
+                shas = [commit["sha"] for commit in commit_data]
                 commits = await __get_commits_str(
-                    ctx=ctx,
-                    repo_owner=owner,
-                    repo_name=repo,
-                    commit_shas=shas
+                    ctx=ctx, repo_owner=owner, repo_name=repo, commit_shas=shas
                 )
                 parts.append(commits)
             if number_of_comments > 0:
-                comment_url = f'{url}/comments'
+                comment_url = f"{url}/comments"
                 comments = await __get_comments_str(ctx, comment_url)
                 parts.append(comments)
-            content = ''.join(parts)
+            content = "".join(parts)
             log_truncation(content, start_index=start_index, max_length=max_length)
             return format_result(
                 url=pr_url,
                 content=content,
                 start_index=start_index,
                 max_length=max_length,
-                content_type='Pull Request'
+                content_type="Pull Request",
             )
         except Exception as e:
-            await ctx.error(f'Error getting pull request details: {e}')
-            return ''
+            await ctx.error(f"Error getting pull request details: {e}")
+            return ""
 
-async def get_raw_code(ctx: Context, code_url:str, max_length: int, start_index: int, session_uuid: str) -> str:
+
+async def get_raw_code(
+    ctx: Context, code_url: str, max_length: int, start_index: int, session_uuid: str
+) -> str:
     """
     Get raw code content from a GitHub URL.
 
@@ -334,8 +364,8 @@ async def get_raw_code(ctx: Context, code_url:str, max_length: int, start_index:
     Returns:
         Markdown content of the code file
     """
-    raw_url = code_url.replace('github.com', 'raw.githubusercontent.com')
-    raw_url = raw_url.replace('/blob/', '/')
+    raw_url = code_url.replace("github.com", "raw.githubusercontent.com")
+    raw_url = raw_url.replace("/blob/", "/")
     with httpx.Client() as client:
         try:
             response = client.get(raw_url)
@@ -346,7 +376,13 @@ async def get_raw_code(ctx: Context, code_url:str, max_length: int, start_index:
                 content=response.text,
                 start_index=start_index,
                 max_length=max_length,
-                content_type='Code'
+                content_type="Code",
             )
         except Exception as e:
-            return await read_documentation_html(ctx=ctx, url_str=code_url, max_length=max_length, start_index=start_index, session_uuid=session_uuid)
+            return await read_documentation_html(
+                ctx=ctx,
+                url_str=code_url,
+                max_length=max_length,
+                start_index=start_index,
+                session_uuid=session_uuid,
+            )

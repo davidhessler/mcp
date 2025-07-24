@@ -14,10 +14,7 @@
 
 import pytest
 from unittest.mock import patch, AsyncMock, MagicMock
-from awslabs.aws_sra_mcp_server.github import (
-    search_github,
-    SRA_REPOSITORIES
-)
+from awslabs.aws_sra_mcp_server.github import search_github, SRA_REPOSITORIES
 
 
 @pytest.mark.asyncio
@@ -32,11 +29,11 @@ async def test_search_github(mock_client, mock_context):
             {
                 "name": "example.py",
                 "path": "src/example.py",
-                "html_url": "https://github.com/awslabs/sra-verify/blob/main/src/example.py"
+                "html_url": "https://github.com/awslabs/sra-verify/blob/main/src/example.py",
             }
         ]
     }
-    
+
     # Setup mock responses for issues search
     mock_issues_response = MagicMock()
     mock_issues_response.status_code = 200
@@ -45,43 +42,43 @@ async def test_search_github(mock_client, mock_context):
             {
                 "title": "Security issue example",
                 "html_url": "https://github.com/awslabs/sra-verify/issues/1",
-                "body": "This is an example security issue"
+                "body": "This is an example security issue",
             }
         ]
     }
-    
+
     # Setup mock client to return different responses for different URLs
     mock_client_instance = AsyncMock()
-    
+
     def mock_get(url, **kwargs):
         if "search/code" in url:
             return mock_code_response
         elif "search/issues" in url:
             return mock_issues_response
         return MagicMock()
-    
+
     mock_client_instance.__aenter__.return_value.get.side_effect = mock_get
     mock_client.return_value = mock_client_instance
-    
+
     # Call the function
     results = await search_github(mock_context, "security", limit=10)
-    
+
     # Verify the results
     assert len(results) >= 1
-    
+
     # Check that we have both code and issue results
     code_results = [r for r in results if "[Code]" in r.title]
     issue_results = [r for r in results if "[Issue]" in r.title]
-    
+
     assert len(code_results) >= 1
     assert len(issue_results) >= 1
-    
+
     # Verify code result
     code_result = code_results[0]
     assert "example.py" in code_result.title
     assert "sra-verify" in code_result.title
     assert code_result.url == "https://github.com/awslabs/sra-verify/blob/main/src/example.py"
-    
+
     # Verify issue result
     issue_result = issue_results[0]
     assert "Security issue example" in issue_result.title
@@ -104,15 +101,15 @@ async def test_search_github_with_token(mock_client, mock_context):
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = {"items": []}
-    
+
     # Setup mock client
     mock_client_instance = AsyncMock()
     mock_client_instance.__aenter__.return_value.get.return_value = mock_response
     mock_client.return_value = mock_client_instance
-    
+
     # Call the function with a token
     await search_github(mock_context, "security", limit=10, github_token="test-token")
-    
+
     # Verify that the Authorization header was set
     calls = mock_client_instance.__aenter__.return_value.get.call_args_list
     for call in calls:
@@ -129,10 +126,10 @@ async def test_search_github_error_handling(mock_client, mock_context):
     mock_client_instance = AsyncMock()
     mock_client_instance.__aenter__.return_value.get.side_effect = Exception("API Error")
     mock_client.return_value = mock_client_instance
-    
+
     # Call the function - it should handle errors gracefully
     results = await search_github(mock_context, "security", limit=10)
-    
+
     # Should return empty list when errors occur
     assert isinstance(results, list)
     assert len(results) == 0

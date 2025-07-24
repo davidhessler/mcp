@@ -18,9 +18,11 @@ from unittest.mock import patch, AsyncMock, MagicMock
 from awslabs.aws_sra_mcp_server.server import MCP
 from fastmcp import Client
 
+
 @pytest.fixture
 def client():
     return Client(MCP)
+
 
 async def call_tool(client: Client, tool, **kwargs):
     """Helper function to call an MCP tool as an integration test"""
@@ -81,7 +83,9 @@ async def test_recommend_filters_security_results(mock_client, client):
     # Call the function
     async with client:
         results = await call_tool(
-            client, "recommend", url="https://docs.aws.amazon.com/security-reference-architecture/welcome.html"
+            client,
+            "recommend",
+            url="https://docs.aws.amazon.com/security-reference-architecture/welcome.html",
         )
 
     # Verify that we got results
@@ -103,7 +107,9 @@ async def test_recommend_error_handling(mock_client, client):
     try:
         async with client:
             results = await call_tool(
-                client, "recommend", url="https://docs.aws.amazon.com/security-reference-architecture/welcome.html"
+                client,
+                "recommend",
+                url="https://docs.aws.amazon.com/security-reference-architecture/welcome.html",
             )
 
         # Verify the results - should return a list with an error message

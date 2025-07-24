@@ -20,6 +20,7 @@ import uuid
 from mcp import McpError
 
 from awslabs.aws_sra_mcp_server import SECURITY_KEYWORDS
+
 # Import models
 from awslabs.aws_sra_mcp_server.models import (
     RecommendationResult,
@@ -27,19 +28,29 @@ from awslabs.aws_sra_mcp_server.models import (
 )
 
 from awslabs.aws_sra_mcp_server.server_utils import (
-    read_documentation_html, read_documentation_markdown, read_other
+    read_documentation_html,
+    read_documentation_markdown,
+    read_other,
 )
 
 # Import search functionality
-from awslabs.aws_sra_mcp_server.github import search_github, get_issue_markdown, get_pr_markdown, get_raw_code
-from awslabs.aws_sra_mcp_server.aws_documentation import search_sra_documentation, get_recommendations
+from awslabs.aws_sra_mcp_server.github import (
+    search_github,
+    get_issue_markdown,
+    get_pr_markdown,
+    get_raw_code,
+)
+from awslabs.aws_sra_mcp_server.aws_documentation import (
+    search_sra_documentation,
+    get_recommendations,
+)
 
 from loguru import logger
 from fastmcp import FastMCP, Context
 from fastmcp.server.elicitation import (
     AcceptedElicitation,
     DeclinedElicitation,
-    CancelledElicitation
+    CancelledElicitation,
 )
 from pydantic import Field
 from typing import List, Dict, Any, Optional, Tuple
@@ -80,6 +91,7 @@ MCP = FastMCP(
     ],
 )
 
+
 async def get_github_token(ctx: Context) -> str | None:
     token = os.environ.get("GITHUB_TOKEN")
     if not token:
@@ -91,22 +103,25 @@ async def get_github_token(ctx: Context) -> str | None:
             )
             match result:
                 case AcceptedElicitation(data=token):
-                    print('Received GITHUB TOKEN from user. Continuing')
+                    print("Received GITHUB TOKEN from user. Continuing")
                     return token
                 case DeclinedElicitation():
-                    print('User declined to provide GITHUB TOKEN. Continuing without GitHub search.')
-                    return ''
+                    print(
+                        "User declined to provide GITHUB TOKEN. Continuing without GitHub search."
+                    )
+                    return ""
                 case CancelledElicitation():
-                    print('User cancelled. Exiting.')
+                    print("User cancelled. Exiting.")
                     return None
                 case _:
                     return None
         except McpError as e:
-            if not 'Elicitation not supported' in e.args:
+            if not "Elicitation not supported" in e.args:
                 logger.error(f"Error eliciting GITHUB_TOKEN: {e}")
             return None
     else:
         return token
+
 
 @MCP.tool()
 async def read_security_and_compliance_best_practices_content(
@@ -171,21 +186,28 @@ async def read_security_and_compliance_best_practices_content(
     """
     # Validate that URL is from docs.aws.amazon.com and ends with .html
     url_str = str(url)
-    if not re.match(r"^https?://docs\.aws\.amazon\.com/", url_str) and not re.match(r"^https?://github\.com/", url_str):
-        await ctx.error(f"Invalid URL: {url_str}. URL must be from the docs.aws.amazon.com domain or GitHub")
+    if not re.match(r"^https?://docs\.aws\.amazon\.com/", url_str) and not re.match(
+        r"^https?://github\.com/", url_str
+    ):
+        await ctx.error(
+            f"Invalid URL: {url_str}. URL must be from the docs.aws.amazon.com domain or GitHub"
+        )
         raise ValueError("URL must be from the docs.aws.amazon.com domain or GitHub")
     if url_str.endswith(".html"):
         return await read_documentation_html(ctx, url_str, max_length, start_index, SESSION_UUID)
     elif url_str.endswith(".md"):
-        return await read_documentation_markdown(ctx, url_str, max_length, start_index, SESSION_UUID)
+        return await read_documentation_markdown(
+            ctx, url_str, max_length, start_index, SESSION_UUID
+        )
     elif re.search(r"issues/\d+(?=$|[/?#])", url_str):
-        return await get_issue_markdown(ctx, url_str,max_length, start_index)
-    elif re.search(r'pull/\d+(?=$|[/?#])', url_str):
+        return await get_issue_markdown(ctx, url_str, max_length, start_index)
+    elif re.search(r"pull/\d+(?=$|[/?#])", url_str):
         return await get_pr_markdown(ctx, url_str, max_length, start_index)
     elif re.match(r"^https?://github\.com/", url_str):
         return await get_raw_code(ctx, url_str, max_length, start_index, SESSION_UUID)
     else:
         return await read_other(ctx, url_str, max_length, start_index, SESSION_UUID)
+
 
 @MCP.tool()
 async def search_security_and_compliance_best_practices_content(
@@ -198,7 +220,7 @@ async def search_security_and_compliance_best_practices_content(
         description="Maximum number of results to return",
         ge=1,
         le=50,
-    )
+    ),
 ) -> List[SearchResult]:
     """Search security and compliance best practices content stored in the AWS Security Reference Architecture prescriptive guidance and GitHub repositories.
 
@@ -207,7 +229,7 @@ async def search_security_and_compliance_best_practices_content(
     This tool searches across multiple sources:
     1. AWS Security Reference Architecture as well as security and compliance related documentation
     2. GitHub code repositories: awslabs/sra-verify and aws-samples/aws-security-reference-architecture-examples
-    
+
     It returns results from both sources prioritizing an equal mix of documentation and content from GitHub (i.e., code, issues, and pull requests).
 
     ## Search Tips
@@ -225,7 +247,7 @@ async def search_security_and_compliance_best_practices_content(
     - url: The prescriptive guidance page URL or GitHub URL
     - title: The page title or GitHub resource title
     - context: A brief excerpt or summary (if available)
-    
+
     GitHub results are prefixed with:
     - [Code]: For code files in the repositories
     - [Issue]: For GitHub issues
@@ -246,10 +268,10 @@ async def search_security_and_compliance_best_practices_content(
     try:
         # Search AWS documentation
         aws_docs_results = await search_sra_documentation(ctx, search_phrase, limit)
-        
+
         # Log that we're searching GitHub repositories
         await ctx.info(f"Searching SRA GitHub repositories for: {search_phrase}")
-        
+
         # Search GitHub repositories
         # Use token from environment variable
         token = await get_github_token(ctx)
@@ -258,7 +280,7 @@ async def search_security_and_compliance_best_practices_content(
 
         # Log the number of GitHub results found
         await ctx.debug(f"Found {len(github_results)} GitHub results for: {search_phrase}")
-        
+
         # If both searches failed, return an error
         if not aws_docs_results and not github_results:
             error_msg = "Failed to retrieve search results from both AWS documentation and GitHub repositories"
@@ -282,11 +304,11 @@ async def search_security_and_compliance_best_practices_content(
             or (result.context and keyword in result.context.lower())
             for keyword in SECURITY_KEYWORDS
         )
-        
+
         # Add to combined results if security-related or if we don't have enough results yet
         if is_security_related or len(aws_docs_filtered_results) < limit:
             aws_docs_filtered_results.append(result)
-    
+
     # Compute Limits -- deprioritize docs over gh content
     docs_limit = limit // 2 if limit % 2 == 0 else (limit // 2) - 1
     gh_limit = limit // 2 if limit % 2 == 0 else (limit // 2) + 1
@@ -301,7 +323,9 @@ async def search_security_and_compliance_best_practices_content(
     # Sort by rank_order and limit results
     combined_results.sort(key=lambda x: x.rank_order)
 
-    logger.debug(f"Found {len(combined_results)} security-focused search results for: {search_phrase}")
+    logger.debug(
+        f"Found {len(combined_results)} security-focused search results for: {search_phrase}"
+    )
     return combined_results
 
 
@@ -316,7 +340,7 @@ async def recommend(
         description="Maximum number of results to return",
         ge=1,
         le=50,
-    )
+    ),
 ) -> List[RecommendationResult]:
     """Get security and compliance content recommendations for AWS Security Reference Architecture content.
 
@@ -419,8 +443,6 @@ async def recommend(
 
     logger.debug(f"Found {len(security_results)} security-focused recommendations for: {url_str}")
     return security_results
-
-
 
 
 def main():
