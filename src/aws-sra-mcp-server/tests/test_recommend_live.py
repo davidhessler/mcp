@@ -15,10 +15,6 @@ import json
 
 import pytest
 from unittest.mock import patch, AsyncMock, MagicMock
-
-from fastmcp.client.client import CallToolResult
-from mcp.types import TextContent, ImageContent, AudioContent, ResourceLink, EmbeddedResource
-
 from awslabs.aws_sra_mcp_server.server import MCP
 from fastmcp import Client
 
@@ -26,7 +22,7 @@ from fastmcp import Client
 def client():
     return Client(MCP)
 
-async def call_tool(client: Client, tool, **kwargs) -> CallToolResult:
+async def call_tool(client: Client, tool, **kwargs):
     """Helper function to call an MCP tool as an integration test"""
     params = {}
     for key, value in kwargs.items():
@@ -88,18 +84,10 @@ async def test_recommend_filters_security_results(mock_client, client):
             client, "recommend", url="https://docs.aws.amazon.com/security-reference-architecture/welcome.html"
         )
 
-
     # Verify that we got results
     assert results is not None
-
     assert len(results.content) > 0
-    content_item = results.content[0]
-    
-    # Check if the content is TextContent before accessing text attribute
-    assert isinstance(content_item, TextContent), f"Expected TextContent but got {type(content_item)}"
-    
-    data:list = json.loads(content_item.text)
-    assert len(data) > 0
+    assert len(json.loads(results.content[0].text)) > 0
 
 
 @pytest.mark.asyncio

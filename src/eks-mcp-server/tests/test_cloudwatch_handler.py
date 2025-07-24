@@ -45,7 +45,7 @@ class TestCloudWatchHandler:
         handler = CloudWatchHandler(mock_mcp)
 
         # Verify that the handler has the correct attributes
-        assert handler.MCP == mock_mcp
+        assert handler.mcp == mock_mcp
         assert handler.allow_sensitive_data_access is False
 
         # Verify that both tools are registered

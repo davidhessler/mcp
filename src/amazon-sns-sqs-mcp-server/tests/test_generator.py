@@ -49,7 +49,7 @@ class TestAWSToolGenerator(unittest.TestCase):
 
         self.assertEqual(generator.service_name, 'sqs')
         self.assertEqual(generator.service_display_name, 'SQS')
-        self.assertEqual(generator.MCP, self.mcp_mock)
+        self.assertEqual(generator.mcp, self.mcp_mock)
         self.assertEqual(generator.tool_configuration, {})
         self.assertEqual(generator.skip_param_documentation, False)  # Default value
 
