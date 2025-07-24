@@ -18,7 +18,7 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_FROZEN=true \
     PATH="/root/.local/bin:$PATH"
 
-RUN mkdir -p /root/.local
+RUN mkdir -p /root/.local /root/.cache
 
 WORKDIR /app
 
@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml uv.lock docker-healthcheck.sh LICENSE .python-version README.md /app/
+COPY pyproject.toml uv.lock docker-healthcheck.sh LICENSE README.md /app/
 COPY awslabs/ /app/awslabs/
 
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -59,7 +59,7 @@ COPY --from=builder --chown=app:app /root/.local /root/.local
 COPY --from=builder --chown=app:app /app/.venv/ /app/.venv
 COPY --from=builder --chown=app:app --chmod=755 /app/docker-healthcheck.sh /usr/local/bin/
 
-#USER app
+USER app
 WORKDIR /app
 
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
