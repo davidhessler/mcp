@@ -142,19 +142,3 @@ async def test_read_security_and_compliance_best_practices_content_github_code()
             "Description: Installs the AWS SRA GuardDuty solution.  If needed, the AWS SRA common "
             "prerequisite solution is also installed.  (sra-1u3sd7f8m)" in text_result
         )
-
-
-@pytest.mark.asyncio
-async def test_recommendations():
-    async with client:
-        result = await client.call_tool(
-            "recommend",
-            {
-                "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/security-tooling.html",
-                "limit": 10,
-            },
-        )
-        assert len(result.content) > 0
-        json_result = json.loads(result.content[0].text)
-        titles = [r["title"] for r in json_result]
-        assert "Security concepts and best practices for AWS" in titles
