@@ -79,7 +79,7 @@ Configure the MCP server in your Cline MCP settings (`cline_mcp_settings.json`):
 
 ### Kiro
 
-Configure the MCP server in Kiro by navigating to `Kiro` > `MCP Servers` and adding to your Kiro MCP 
+Configure the MCP server in Kiro by navigating to `Kiro` > `MCP Servers` and adding to your Kiro MCP
 Settings (`~/.kiro/setting/mcp.json`):
 
 ```json
