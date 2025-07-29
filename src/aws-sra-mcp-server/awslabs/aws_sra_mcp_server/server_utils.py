@@ -24,12 +24,6 @@ from awslabs.aws_sra_mcp_server.util import (
     is_html_content,
 )
 
-try:
-    __version__ = version("awslabs.aws-sra-mcp-server")
-except Exception:
-    pass
-
-
 async def _fetch_url(ctx: Context, url_str: str, session_uuid: str) -> tuple[str, Optional[str]]:
     """Fetch URL content and return (content, error_msg).
 
