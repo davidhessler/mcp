@@ -27,7 +27,7 @@ The AWS Security Reference Architecture (SRA) is a holistic set of guidelines fo
 
 1. Install `uv` from [Astral](https://docs.astral.sh/uv/getting-started/installation/) or the [GitHub README](https://github.com/astral-sh/uv#installation)
 2. Install Python 3.10 or newer using `uv python install 3.10` (or a more recent version)
-3. **GitHub Token**: Create a GitHub personal access token for accessing AWS SRA repositories. Set 
+3. **GitHub Token**: Create a GitHub personal access token for accessing AWS SRA repositories. Set
    the `GITHUB_TOKEN` environment variable with your token. For instructions on creating the
    personal access token, visit [GitHub's documentation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
 
@@ -79,7 +79,8 @@ Configure the MCP server in your Cline MCP settings (`cline_mcp_settings.json`):
 
 ### Kiro
 
-Configure the MCP server in Kiro by navigating to `Kiro` > `MCP Servers` and adding:
+Configure the MCP server in Kiro by navigating to `Kiro` > `MCP Servers` and adding to your Kiro MCP 
+Settings (`~/.kiro/setting/mcp.json`):
 
 ```json
 {
@@ -133,20 +134,20 @@ Example:
 
 The server provides the following tools:
 
-### search_documentation
+### search_content
 
 Search AWS Security Reference Architecture documentation using the official AWS Documentation Search API.
 
 ```python
-search_documentation(search_phrase: str, limit: int = 10) -> List[SearchResult]
+search_content(search_phrase: str, limit: int = 10) -> List[SearchResult]
 ```
 
-### read_documentation
+### read_content
 
 Fetch and convert an AWS Security Reference Architecture documentation page to markdown format.
 
 ```python
-read_documentation(url: str, max_length: int = 5000, start_index: int = 0) -> str
+read_content(url: str, max_length: int = 5000, start_index: int = 0) -> str
 ```
 
 ### recommend

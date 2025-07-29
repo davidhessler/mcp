@@ -119,9 +119,7 @@ async def test_read_security_and_compliance_best_practices_content_github_pr():
     """Tests search documentation"""
     async with client:
         url = "https://github.com/aws-samples/aws-security-reference-architecture-examples/pull/167"
-        result = await client.call_tool(
-            "read_content", {"url": url, "start_index": 0}
-        )
+        result = await client.call_tool("read_content", {"url": url, "start_index": 0})
         assert len(result.content) > 0
         assert isinstance(result.content[0], TextContent)
         text_result = result.content[0].text
