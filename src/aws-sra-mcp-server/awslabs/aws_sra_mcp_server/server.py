@@ -130,7 +130,7 @@ async def get_github_token(ctx: Context) -> str | None:
 
 
 @MCP.tool()
-async def read_security_and_compliance_best_practices_content(
+async def read_content(
     ctx: Context,
     url: str = Field(
         description="URL of the AWS Security Reference Architecture documentation page to read"
@@ -220,7 +220,7 @@ async def read_security_and_compliance_best_practices_content(
 
 
 @MCP.tool()
-async def search_security_and_compliance_best_practices_content(
+async def search_content(
     ctx: Context,
     search_phrase: str = Field(
         description="Search phrase to use for finding security and compliance documentation"
@@ -276,31 +276,55 @@ async def search_security_and_compliance_best_practices_content(
     Returns:
         List of security-focused search results with URLs, titles, and context snippets
     """
+    import asyncio
+    
     await ctx.debug(
         f"Searching AWS Security Reference Architecture documentation for: {search_phrase}"
     )
 
     try:
-        # Search AWS documentation
-        aws_docs_results = await search_sra_documentation(ctx, search_phrase, limit)
+        # Set timeout for the entire search operation (60 seconds)
+        async with asyncio.timeout(60):
+            # Search AWS documentation with timeout
+            aws_docs_task = asyncio.create_task(
+                search_sra_documentation(ctx, search_phrase, limit)
+            )
+            
+            # Get GitHub token
+            token = await get_github_token(ctx)
+            
+            # Search GitHub repositories with timeout
+            github_task = asyncio.create_task(
+                search_github(ctx, search_phrase, limit, token)
+            )
+            
+            # Wait for both searches to complete or timeout
+            aws_docs_results, github_results = await asyncio.gather(
+                aws_docs_task, github_task, return_exceptions=True
+            )
+            
+            # Handle exceptions from tasks
+            if isinstance(aws_docs_results, Exception):
+                await ctx.error(f"AWS docs search failed: {aws_docs_results}")
+                aws_docs_results = []
+            
+            if isinstance(github_results, Exception):
+                await ctx.error(f"GitHub search failed: {github_results}")
+                github_results = []
 
-        # Log that we're searching GitHub repositories
-        await ctx.info(f"Searching SRA GitHub repositories for: {search_phrase}")
+            # Log the number of GitHub results found
+            await ctx.debug(f"Found {len(github_results)} GitHub results for: {search_phrase}")
 
-        # Search GitHub repositories
-        # Use token from environment variable
-        token = await get_github_token(ctx)
-
-        github_results = await search_github(ctx, search_phrase, limit, token)
-
-        # Log the number of GitHub results found
-        await ctx.debug(f"Found {len(github_results)} GitHub results for: {search_phrase}")
-
-        # If both searches failed, return an error
-        if not aws_docs_results and not github_results:
-            error_msg = "Failed to retrieve search results from both AWS and GitHub content"
-            await ctx.error(error_msg)
-            return [SearchResult(rank_order=1, url="", title=error_msg, context=None)]
+            # If both searches failed, return an error
+            if not aws_docs_results and not github_results:
+                error_msg = "Failed to retrieve search results from both AWS and GitHub content"
+                await ctx.error(error_msg)
+                return [SearchResult(rank_order=1, url="", title=error_msg, context=None)]
+                
+    except asyncio.TimeoutError:
+        error_msg = f"Search operation timed out after 60 seconds for: {search_phrase}"
+        await ctx.error(error_msg)
+        return [SearchResult(rank_order=1, url="", title=error_msg, context=None)]
     except Exception as e:
         error_msg = f"Error searching documentation: {str(e)}"
         await ctx.error(error_msg)

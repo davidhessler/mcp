@@ -14,7 +14,7 @@ client = Client(MCP)
 async def test_search_security_and_compliance_best_practices_content_unauthenticated():
     async with client:
         result = await client.call_tool(
-            "search_security_and_compliance_best_practices_content",
+            "search_content",
             {"search_phrase": "Security Hub"},
         )
         assert len(result.content) > 0
@@ -41,7 +41,7 @@ async def test_search_security_and_compliance_best_practices_content_unauthentic
 async def test_search_security_and_compliance_best_practices_content_authenticated():
     async with client:
         result = await client.call_tool(
-            "search_security_and_compliance_best_practices_content",
+            "search_content",
             {"search_phrase": "Security Hub"},
         )
         assert len(result.content) > 0
@@ -64,7 +64,7 @@ async def test_read_security_and_compliance_best_practices_content_prescriptive_
     """Tests search documentation"""
     async with client:
         result = await client.call_tool(
-            "read_security_and_compliance_best_practices_content",
+            "read_content",
             {
                 "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/security-tooling.html",
                 "start_index": 0,
@@ -82,7 +82,7 @@ async def test_read_security_and_compliance_best_practices_content_prescriptive_
     """Tests search documentation"""
     async with client:
         result = await client.call_tool(
-            "read_security_and_compliance_best_practices_content",
+            "read_content",
             {
                 # noqa: E501
                 "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/security-tooling.html",
@@ -100,7 +100,7 @@ async def test_read_security_and_compliance_best_practices_content_github_issues
     """Tests search documentation"""
     async with client:
         result = await client.call_tool(
-            "read_security_and_compliance_best_practices_content",
+            "read_content",
             {
                 "url": "https://github.com/aws-samples/aws-security-reference-architecture-examples/issues/225",
                 "start_index": 0,
@@ -120,7 +120,7 @@ async def test_read_security_and_compliance_best_practices_content_github_pr():
     async with client:
         url = "https://github.com/aws-samples/aws-security-reference-architecture-examples/pull/167"
         result = await client.call_tool(
-            "read_security_and_compliance_best_practices_content", {"url": url, "start_index": 0}
+            "read_content", {"url": url, "start_index": 0}
         )
         assert len(result.content) > 0
         assert isinstance(result.content[0], TextContent)
@@ -136,7 +136,7 @@ async def test_read_security_and_compliance_best_practices_content_github_code()
     """Tests search documentation"""
     async with client:
         result = await client.call_tool(
-            "read_security_and_compliance_best_practices_content",
+            "read_content",
             {
                 "url": "https://github.com/aws-samples/aws-security-reference-architecture-examples/blob/main/aws_sra_examples/modules/guardduty-org-module/templates/sra-guardduty-org-solution.yaml",
                 "start_index": 0,

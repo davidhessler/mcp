@@ -161,8 +161,8 @@ async def search_sra_documentation(
     """
     await ctx.debug(f"Searching AWS documentation for: {search_phrase}")
 
-    # Create a client for AWS documentation search
-    async with AsyncClient() as client:
+    # Create a client for AWS documentation search with timeout
+    async with AsyncClient(timeout=30.0) as client:
         try:
             data = await _execute_search_request(client, search_phrase)
             return parse_search_results(data, limit)
@@ -184,8 +184,8 @@ async def get_recommendations(ctx: Context, url: str) -> List[RecommendationResu
     """
     await ctx.debug(f"Getting recommendations for: {url}")
 
-    # Create a client for AWS documentation recommendations
-    async with AsyncClient() as client:
+    # Create a client for AWS documentation recommendations with timeout
+    async with AsyncClient(timeout=30.0) as client:
         try:
             data = await _execute_recommendation_request(client, url)
             return parse_recommendation_results(data)
@@ -211,9 +211,9 @@ async def get_multiple_recommendations(
 
     results = {}
 
-    # Create a client for AWS documentation recommendations
+    # Create a client for AWS documentation recommendations with timeout
     #  amazonq-ignore-next-line
-    async with AsyncClient() as client:
+    async with AsyncClient(timeout=30.0) as client:
         try:
             # Execute requests in batches to avoid overwhelming the API
             for i in range(0, len(urls), MAX_CONCURRENT_REQUESTS):

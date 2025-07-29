@@ -92,3 +92,9 @@ name = "cz_conventional_commits"
        "awslabs/aws-sra-mcp-server/__init__.py:__version__"
    ]
    update_changelog_on_bump = true
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.0.0",
+]

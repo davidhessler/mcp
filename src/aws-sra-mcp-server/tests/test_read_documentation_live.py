@@ -93,7 +93,7 @@ async def test_read_documentation_with_pagination(mock_read_impl, client):
         # First call with start_index=0
         result1 = await call_tool(
             client,
-            "read_security_and_compliance_best_practices_content",
+            "read_content",
             url="https://docs.aws.amazon.com/test.html",
             max_length=10,
             start_index=0,
@@ -105,7 +105,7 @@ async def test_read_documentation_with_pagination(mock_read_impl, client):
         # Second call with start_index=6
         result2 = await call_tool(
             client,
-            "read_security_and_compliance_best_practices_content",
+            "read_content",
             url="https://docs.aws.amazon.com/test.html",
             max_length=10,
             start_index=6,
@@ -117,7 +117,7 @@ async def test_read_documentation_with_pagination(mock_read_impl, client):
         # Third call with start_index=12
         result3 = await call_tool(
             client,
-            "read_security_and_compliance_best_practices_content",
+            "read_content",
             url="https://docs.aws.amazon.com/test.html",
             max_length=10,
             start_index=12,

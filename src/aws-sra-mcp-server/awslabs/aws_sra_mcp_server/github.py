@@ -54,7 +54,7 @@ async def __get_commits_str(
     """
     parts = ["\n\n## Commits\n\nBelow is information on commits\n\n"]
     try:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             for sha in commit_shas:
                 commit_url = f"{GITHUB_API_URL}/repos/{repo_owner}/{repo_name}/commits/{sha}"
                 response = await _http_get_with_retry(client, commit_url)
@@ -86,7 +86,7 @@ async def __get_comments_str(ctx: Context, comment_url: str) -> str:
     Returns:
         Formatted string with comments
     """
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         try:
             parts = ["\n\n## Comments\n\nBelow is information on comments\n\n"]
             response = await _http_get_with_retry(client, comment_url)
@@ -165,8 +165,8 @@ async def search_github(
     """
     results = []
 
-    # Create a client for GitHub API requests
-    async with httpx.AsyncClient() as client:
+    # Create a client for GitHub API requests with timeout
+    async with httpx.AsyncClient(timeout=30.0) as client:
         # Set up headers with authorization if token is provided
         headers = {}
         if github_token:
@@ -251,7 +251,7 @@ async def get_issue_markdown(
     url = f"{GITHUB_API_URL}/repos/{owner}/{repo}/issues/{issue_number}"
 
     # Create a client for GitHub API requests
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         try:
             response = await _http_get_with_retry(client, url)
             response.raise_for_status()
@@ -300,7 +300,7 @@ async def get_pr_markdown(ctx: Context, pr_url: str, max_length: int, start_inde
 
     url = f"{GITHUB_API_URL}/repos/{owner}/{repo}/pulls/{pr_number}"
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         try:
             response = await client.get(url)
             response.raise_for_status()
@@ -357,7 +357,7 @@ async def get_raw_code(
     """
     raw_url = code_url.replace("github.com", "raw.githubusercontent.com")
     raw_url = raw_url.replace("/blob/", "/")
-    with httpx.Client() as client:
+    with httpx.Client(timeout=30.0) as client:
         try:
             response = client.get(raw_url)
             response.raise_for_status()
