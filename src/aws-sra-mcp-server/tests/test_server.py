@@ -11,25 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from unittest.mock import patch
-
 import pytest
-
-
-@pytest.mark.asyncio
-@patch("awslabs.aws_sra_mcp_server.server_utils.read_documentation_html")
-async def test_read_documentation_html_called(mock_html, client):
-    """Test that read_documentation calls the implementation function."""
-    mock_html.return_value = "Test content"
-
-    url = "https://docs.aws.amazon.com/security-reference-architecture/welcome.html"
-    max_length = 1000
-    start_index = 0
-
-    # Verify the mock is properly set up
-    assert mock_html.return_value == "Test content"
-
 
 @pytest.mark.asyncio
 @patch("awslabs.aws_sra_mcp_server.github.search_github")

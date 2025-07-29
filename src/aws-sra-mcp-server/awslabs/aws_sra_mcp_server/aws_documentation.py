@@ -60,7 +60,7 @@ def parse_recommendation_results(data: Dict[str, Any]) -> List[RecommendationRes
             if "urls" in intent_group:
                 process_items(
                     intent_group["urls"],
-                    lambda _, inner_intent=intent: f"Intent: {inner_intent}" if intent else None,
+                    lambda _, inner_intent=intent: f"Intent: {inner_intent}" if inner_intent else None,
                 )
 
     if "new" in data and "items" in data["new"]:

@@ -73,9 +73,10 @@ MCP = FastMCP(
 
     - For long documentation pages, make multiple calls to `read_documentation` with different
       `start_index` values for pagination
-    - For very long documents (>30,000 characters), stop reading if you've found the needed information
+    - For very long documents (>30,000 characters), stop reading if you've found the needed 
+      information
     - When searching, use specific security and compliance terms rather than general phrases
-    - Use `recommend` tool to discover related security content that might not appear in search results
+    - Use `recommend` tool to discover related content that might not appear in search results
     - For recent updates to security services, get an URL for any page in that service, then check
       the **New** section of the `recommend` tool output on that URL
     - Always cite the documentation URL when providing security information to users
@@ -142,17 +143,19 @@ async def read_security_and_compliance_best_practices_content(
     ),
     start_index: int = Field(
         default=0,
+        # noqa: E501
         description="On return output starting at this character index, useful if a previous fetch was truncated and more content is required.",
         ge=0,
     ),
 ) -> str:
-    """Fetch security and compliance best practices content stored in the AWS Security Reference Architecture and convert it into markdown format.
+    """Fetch security and compliance best practices content stored in the AWS Security Reference
+    Architecture and convert it into markdown format.
 
     ## Usage
 
-    This tool retrieves the content of an AWS Security Reference Architecture content stores and converts it to markdown format.
-    For long documents, you can make multiple calls with different start_index values to retrieve
-    the entire content in chunks.
+    This tool retrieves the content of an AWS Security Reference Architecture content stores and
+    converts it to markdown format. For long documents, you can make multiple calls with different
+    start_index values to retrieve the entire content in chunks.
 
     ## URL Requirements
 
@@ -177,8 +180,10 @@ async def read_security_and_compliance_best_practices_content(
 
     If the response indicates the document was truncated, you have several options:
 
-    1. **Continue Reading**: Make another call with start_index set to the end of the previous response
-    2. **Stop Early**: For very long documents (>30,000 characters), if you've already found the specific information needed, you can stop reading
+    1. **Continue Reading**: Make another call with start_index set to the end of the previous
+       response
+    2. **Stop Early**: For very long documents (>30,000 characters), if you've already found the
+       specific information needed, you can stop reading
 
     Args:
         ctx: MCP context for logging and error handling
@@ -227,23 +232,28 @@ async def search_security_and_compliance_best_practices_content(
         le=50,
     ),
 ) -> List[SearchResult]:
-    """Search security and compliance best practices content stored in the AWS Security Reference Architecture prescriptive guidance and GitHub repositories.
+    """Search security and compliance best practices content stored in the AWS Security Reference
+     Architecture prescriptive guidance and GitHub repositories.
 
     ## Usage
 
     This tool searches across multiple sources:
     1. AWS Security Reference Architecture as well as security and compliance related documentation
-    2. GitHub code repositories: awslabs/sra-verify and aws-samples/aws-security-reference-architecture-examples
+    2. GitHub code repositories:
+       awslabs/sra-verify and aws-samples/aws-security-reference-architecture-examples
 
-    It returns results from both sources prioritizing an equal mix of documentation and content from GitHub (i.e., code, issues, and pull requests).
+    It returns results from both sources prioritizing an equal mix of documentation and content
+    from GitHub (i.e., code, issues, and pull requests).
 
     ## Search Tips
 
     - Use specific security and compliance terms rather than general phrases
     - Use quotes for exact phrase matching (e.g., "Security Hub" or "Security Account")
-    - Include security or compliance related abbreviations like "SRA", "NIST 800-53", "PCI DSS", "HIPAA", etc.
+    - Include security or compliance related abbreviations like "SRA", "NIST 800-53", "PCI DSS",
+      "HIPAA", etc.
     - Add "security" or "compliance" to your search terms to focus on security-related content
-    - For GitHub-specific searches, include terms like "code", "implementation", "example", "issues", "pull requests", "problems", and "solutions"
+    - For GitHub-specific searches, include terms like "code", "implementation", "example",
+      "issues", "pull requests", "problems", and "solutions"
 
     ## Result Interpretation
 
@@ -288,7 +298,7 @@ async def search_security_and_compliance_best_practices_content(
 
         # If both searches failed, return an error
         if not aws_docs_results and not github_results:
-            error_msg = "Failed to retrieve search results from both AWS documentation and GitHub repositories"
+            error_msg = "Failed to retrieve search results from both AWS and GitHub content"
             await ctx.error(error_msg)
             return [SearchResult(rank_order=1, url="", title=error_msg, context=None)]
     except Exception as e:
@@ -337,7 +347,7 @@ async def search_security_and_compliance_best_practices_content(
 async def recommend(
     ctx: Context,
     url: str = Field(
-        description="URL of the AWS Security Reference Architecture documentation page to get recommendations for"
+        description="URL of the SRA page to get recommendations for"
     ),
     limit: int = Field(
         default=10,
@@ -346,19 +356,21 @@ async def recommend(
         le=50,
     ),
 ) -> List[RecommendationResult]:
-    """Get security and compliance content recommendations for AWS Security Reference Architecture content.
+    """Get security and compliance content recommendations for AWS Security Reference Architecture
+    content.
 
     ## Usage
 
-    This tool provides recommendations for related AWS security and compliance best practices based on a given URL.
-    Use it to discover additional relevant security and compliance content that might not appear in search results.
+    This tool provides recommendations for related AWS security and compliance best practices based
+    on a given URL. Use it to discover additional relevant security and compliance content that
+    might not appear in search results.
 
     ## Recommendation Types
 
     The recommendations include four categories:
 
     1. **Highly Rated**: Popular security and compliance pages
-    2. **New**: Recently added security and compliance pages - useful for finding newly released security and compliance features
+    2. **New**: Recently added security and compliance pages
     3. **Similar**: Pages covering similar security anc compliance topics
     4. **Journey**: Pages commonly viewed next by other security and compliance professionals
 
@@ -368,7 +380,7 @@ async def recommend(
     - When exploring a new AWS security or compliance service to discover important content
     - To find alternative explanations of complex security and compliance concepts
     - To discover the most popular security and compliance content for a service
-    - To find newly released security and compliance information by using a service's welcome page URL
+    - To find new security and compliance details for services.
 
     ## Finding New Security Features
 
@@ -386,7 +398,7 @@ async def recommend(
 
     Args:
         ctx: MCP context for logging and error handling
-        url: URL of the AWS Security Reference Architecture documentation page to get recommendations for
+        url: URL of the SRA documentation page to get recommendations for
         limit: Maximum number of results to return
     Returns:
         List of recommended security pages with URLs, titles, and context
