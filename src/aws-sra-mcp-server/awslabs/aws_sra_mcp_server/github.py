@@ -13,19 +13,17 @@
 # limitations under the License.
 """GitHub search functionality for AWS Security Reference Architecture MCP Server."""
 
-import httpx
 import asyncio
-import random
-from typing import List, Dict, Any
-from tenacity import retry, stop_after_attempt, wait_exponential_jitter, retry_if_exception_type
+from typing import Any, Dict, List
 
+import httpx
 from mcp.server.fastmcp import Context
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential_jitter
 
 from awslabs.aws_sra_mcp_server.consts import GITHUB_API_URL, SRA_REPOSITORIES
 from awslabs.aws_sra_mcp_server.models import SearchResult
-from awslabs.aws_sra_mcp_server.server_utils import log_truncation
+from awslabs.aws_sra_mcp_server.server_utils import log_truncation, read_documentation_html
 from awslabs.aws_sra_mcp_server.util import format_result
-from awslabs.aws_sra_mcp_server.server_utils import read_documentation_html
 
 
 # Define retry decorator for HTTP requests
@@ -368,7 +366,7 @@ async def get_raw_code(
                 max_length=max_length,
                 content_type="Code",
             )
-        except Exception as e:
+        except Exception:
             return await read_documentation_html(
                 ctx=ctx,
                 url_str=code_url,

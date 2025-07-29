@@ -27,16 +27,7 @@ async def test_read_documentation_html_called(mock_html, client):
     max_length = 1000
     start_index = 0
 
-    # Call the function directly through the client
-    params = {"url": url, "max_length": max_length, "start_index": start_index}
-
-    # Skip the actual test since the URL doesn't exist
-    # This would be the correct way to test if the URL was valid:
-    # async with client:
-    #     result = await client.call_tool("read_security_and_compliance_best_practices_content", params)
-    # assert result == "Test content"
-
-    # Instead, just verify the mock is properly set up
+    # Verify the mock is properly set up
     assert mock_html.return_value == "Test content"
 
 
@@ -71,17 +62,9 @@ async def test_search_documentation(mock_get_token, mock_search_sra, mock_github
         )
     ]
 
-    # Call the function directly through the client
-    params = {"search_phrase": "security reference architecture", "limit": 10}
-
     # Verify the mocks are properly set up
     mock_search_sra.assert_not_called()
     mock_github_search.assert_not_called()
-
-    # The actual test would be:
-    # async with client:
-    #     results = await client.call_tool("search_security_and_compliance_best_practices_content", params)
-    # assert hasattr(results, 'result')
 
     # Just verify the mocks are set up correctly
     assert len(mock_search_sra.return_value) == 1
@@ -102,9 +85,6 @@ async def test_recommend(mock_get_recommendations, client):
             context="Security Hub overview",
         )
     ]
-
-    # Call the function directly through the client
-    params = {"url": "https://docs.aws.amazon.com/security-reference-architecture/welcome.html"}
 
     # Verify the mock is properly set up
     mock_get_recommendations.assert_not_called()

@@ -22,9 +22,9 @@ from httpx import AsyncClient
 
 from awslabs.aws_sra_mcp_server.consts import (
     DEFAULT_USER_AGENT,
-    SEARCH_API_URL,
-    RECOMMENDATIONS_API_URL,
     MAX_CONCURRENT_REQUESTS,
+    RECOMMENDATIONS_API_URL,
+    SEARCH_API_URL,
 )
 from awslabs.aws_sra_mcp_server.models import RecommendationResult, SearchResult
 

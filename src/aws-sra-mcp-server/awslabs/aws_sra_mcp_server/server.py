@@ -27,11 +27,11 @@ from fastmcp.server.elicitation import (
 from mcp import McpError
 from pydantic import Field
 
-from awslabs.aws_sra_mcp_server.consts import SECURITY_KEYWORDS
 from awslabs.aws_sra_mcp_server.aws_documentation import (
     get_recommendations,
     search_sra_documentation,
 )
+from awslabs.aws_sra_mcp_server.consts import SECURITY_KEYWORDS
 
 # Import search functionality
 from awslabs.aws_sra_mcp_server.github import (
@@ -59,7 +59,7 @@ MCP = FastMCP(
     instructions="""
     # AWS Security Reference Architecture MCP Server
 
-    This server provides tools to access AWS Security Reference Architecture (SRA) documentation, 
+    This server provides tools to access AWS Security Reference Architecture (SRA) documentation,
     search for security and compliance content, and get recommendations.
 
     ## What is AWS Security Reference Architecture?

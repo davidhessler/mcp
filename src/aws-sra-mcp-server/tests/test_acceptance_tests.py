@@ -71,6 +71,7 @@ async def test_read_security_and_compliance_best_practices_content_prescriptive_
 
 
 @pytest.mark.asyncio
+# noqa: E501
 async def test_read_security_and_compliance_best_practices_content_prescriptive_guidance_no_more_content():
     """Tests search documentation"""
     async with client:
@@ -135,8 +136,8 @@ async def test_read_security_and_compliance_best_practices_content_github_code()
         text_result = result.content[0].text
         assert "# SPDX-License-Identifier: MIT-0" in text_result
         assert (
-            "Description: Installs the AWS SRA GuardDuty solution.  If needed, the AWS SRA common prerequisite solution is also installed.  (sra-1u3sd7f8m)"
-            in text_result
+            "Description: Installs the AWS SRA GuardDuty solution.  If needed, the AWS SRA common "
+            "prerequisite solution is also installed.  (sra-1u3sd7f8m)" in text_result
         )
 
 
