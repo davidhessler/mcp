@@ -126,7 +126,7 @@ For general AWS interactions and comprehensive API support, we recommend startin
 #### 📚 Real-time access to official AWS documentation
 
 - **[AWS Documentation MCP Server](src/aws-documentation-mcp-server/)** - Get latest AWS docs and API references
-- **[AWS Security Reference Architecture MCP Server](src/aws-sra-mcp-server)** - Get AWS security and compliance best practices and recommendations including guidance on setting up multi-account environments, using generative AI, and incident response. 
+- **[AWS Security Reference Architecture MCP Server](src/aws-sra-mcp-server)** - Get AWS security and compliance best practices and recommendations including guidance on setting up multi-account environments, using generative AI, and incident response.
 
 #### 🏗️ Infrastructure & Deployment
 

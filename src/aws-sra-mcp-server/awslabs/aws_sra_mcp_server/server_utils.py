@@ -11,23 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from importlib.metadata import version
+from typing import Callable, Optional
+
 import httpx
-from awslabs.aws_sra_mcp_server import DEFAULT_USER_AGENT
+from mcp.server.fastmcp import Context
+
+from awslabs.aws_sra_mcp_server.consts import DEFAULT_USER_AGENT
 from awslabs.aws_sra_mcp_server.util import (
     extract_content_from_html,
     format_result,
     is_html_content,
 )
-from importlib.metadata import version
-from loguru import logger
-from mcp.server.fastmcp import Context
-from typing import Callable, Optional
-
 
 try:
     __version__ = version("awslabs.aws-sra-mcp-server")
 except Exception:
-    from . import __version__
+    pass
 
 
 async def _fetch_url(ctx: Context, url_str: str, session_uuid: str) -> tuple[str, Optional[str]]:
@@ -41,7 +41,7 @@ async def _fetch_url(ctx: Context, url_str: str, session_uuid: str) -> tuple[str
     Returns:
         Tuple containing (content, error_message)
     """
-    logger.debug(f"Fetching documentation from {url_str}")
+    await ctx.debug(f"Fetching documentation from {url_str}")
 
     url_with_session = f"{url_str}?session={session_uuid}"
 
@@ -58,20 +58,18 @@ async def _fetch_url(ctx: Context, url_str: str, session_uuid: str) -> tuple[str
             )
         except Exception as e:
             error_msg = f"Failed to fetch {url_str}: {str(e)}"
-            logger.error(error_msg)
             await ctx.error(error_msg)
             return "", error_msg
 
         if response.status_code >= 400:
             error_msg = f"Failed to fetch {url_str} - status code {response.status_code}"
-            logger.error(error_msg)
             await ctx.error(error_msg)
             return "", error_msg
 
         return response.text, None
 
 
-def log_truncation(content: str, start_index: int, max_length: int) -> None:
+async def log_truncation(ctx: Context, content: str, start_index: int, max_length: int) -> None:
     """Log if content was truncated.
 
     Args:
@@ -80,7 +78,7 @@ def log_truncation(content: str, start_index: int, max_length: int) -> None:
         max_length: Maximum length of content to return
     """
     if len(content) > start_index + max_length:
-        logger.debug(
+        await ctx.debug(
             f"Content truncated at {start_index + max_length} of {len(content)} characters"
         )
 
@@ -112,7 +110,7 @@ async def _read_documentation_base(
 
     content = content_processor(raw_content, "")
     result = format_result(url_str, content, start_index, max_length)
-    log_truncation(content, start_index, max_length)
+    await log_truncation(ctx, content, start_index, max_length)
 
     return result
 

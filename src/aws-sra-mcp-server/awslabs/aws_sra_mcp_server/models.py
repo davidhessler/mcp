@@ -13,8 +13,9 @@
 # limitations under the License.
 """Data models for AWS Security Reference Architecture MCP Server."""
 
-from pydantic import BaseModel
 from typing import Optional
+
+from pydantic import BaseModel
 
 
 class SearchResult(BaseModel):

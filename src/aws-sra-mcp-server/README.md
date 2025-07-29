@@ -4,7 +4,7 @@ The AWS SRA is a holistic set of guidelines for deploying the full complement of
 
 The SRA consists of content in both prescriptive guidance, CloudFormation and Terraform code examples, and assessment tooling to determine how compliant an AWS environment.
 
-The AWS SRA MCP Server enables 
+The AWS SRA MCP Server enables
 
 
 ## Overview

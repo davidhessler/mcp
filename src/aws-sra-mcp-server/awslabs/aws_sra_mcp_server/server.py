@@ -16,45 +16,41 @@
 import os
 import re
 import uuid
+from typing import List
 
+from fastmcp import Context, FastMCP
+from fastmcp.server.elicitation import (
+    AcceptedElicitation,
+    CancelledElicitation,
+    DeclinedElicitation,
+)
 from mcp import McpError
+from pydantic import Field
 
-from awslabs.aws_sra_mcp_server import SECURITY_KEYWORDS
+from awslabs.aws_sra_mcp_server.consts import SECURITY_KEYWORDS
+from awslabs.aws_sra_mcp_server.aws_documentation import (
+    get_recommendations,
+    search_sra_documentation,
+)
+
+# Import search functionality
+from awslabs.aws_sra_mcp_server.github import (
+    get_issue_markdown,
+    get_pr_markdown,
+    get_raw_code,
+    search_github,
+)
 
 # Import models
 from awslabs.aws_sra_mcp_server.models import (
     RecommendationResult,
     SearchResult,
 )
-
 from awslabs.aws_sra_mcp_server.server_utils import (
     read_documentation_html,
     read_documentation_markdown,
     read_other,
 )
-
-# Import search functionality
-from awslabs.aws_sra_mcp_server.github import (
-    search_github,
-    get_issue_markdown,
-    get_pr_markdown,
-    get_raw_code,
-)
-from awslabs.aws_sra_mcp_server.aws_documentation import (
-    search_sra_documentation,
-    get_recommendations,
-)
-
-from loguru import logger
-from fastmcp import FastMCP, Context
-from fastmcp.server.elicitation import (
-    AcceptedElicitation,
-    DeclinedElicitation,
-    CancelledElicitation,
-)
-from pydantic import Field
-from typing import List, Dict, Any, Optional, Tuple
-
 
 SESSION_UUID = str(uuid.uuid4())
 
@@ -63,26 +59,35 @@ MCP = FastMCP(
     instructions="""
     # AWS Security Reference Architecture MCP Server
 
-    This server provides tools to access AWS Security Reference Architecture (SRA) documentation, search for security and compliance content, and get recommendations.
+    This server provides tools to access AWS Security Reference Architecture (SRA) documentation, 
+    search for security and compliance content, and get recommendations.
 
     ## What is AWS Security Reference Architecture?
 
-    The AWS Security Reference Architecture (SRA) is a holistic set of guidelines for deploying the full complement of AWS security services in a multi-account environment. It provides prescriptive guidance on how to architect a security foundation across AWS accounts and AWS Organizations.
+    The AWS Security Reference Architecture (SRA) is a holistic set of guidelines for deploying the
+    full complement of AWS security services in a multi-account environment. It provides
+    prescriptive guidance on how to architect a security foundation across AWS accounts and AWS
+    Organizations.
 
     ## Best Practices
 
-    - For long documentation pages, make multiple calls to `read_documentation` with different `start_index` values for pagination
+    - For long documentation pages, make multiple calls to `read_documentation` with different
+      `start_index` values for pagination
     - For very long documents (>30,000 characters), stop reading if you've found the needed information
     - When searching, use specific security and compliance terms rather than general phrases
     - Use `recommend` tool to discover related security content that might not appear in search results
-    - For recent updates to security services, get an URL for any page in that service, then check the **New** section of the `recommend` tool output on that URL
+    - For recent updates to security services, get an URL for any page in that service, then check
+      the **New** section of the `recommend` tool output on that URL
     - Always cite the documentation URL when providing security information to users
 
     ## Tool Selection Guide
 
-    - Use `search_security_and_compliance_best_practices_content` when: You need to find documentation about AWS security services, compliance, or security best practices
-    - Use `read_security_and_compliance_best_practices_content` when: You have a specific security documentation URL and need its content
-    - Use `recommend` when: You want to find related security content to a documentation page you're already viewing
+    - Use `search_security_and_compliance_best_practices_content` when: You need to find
+      documentation about AWS security services, compliance, or security best practices
+    - Use `read_security_and_compliance_best_practices_content` when: You have a specific security
+      documentation URL and need its content
+    - Use `recommend` when: You want to find related security content to a documentation page you're
+      already viewing
     """,
     dependencies=[
         "pydantic",
@@ -95,7 +100,7 @@ MCP = FastMCP(
 async def get_github_token(ctx: Context) -> str | None:
     token = os.environ.get("GITHUB_TOKEN")
     if not token:
-        logger.warning("GITHUB_TOKEN not set in environment variables")
+        await ctx.warning("GITHUB_TOKEN not set in environment variables")
         try:
             result = await ctx.elicit(
                 message="GITHUB_TOKEN not set in environment variables. Provide a GITHUB_TOKEN.",
@@ -116,8 +121,8 @@ async def get_github_token(ctx: Context) -> str | None:
                 case _:
                     return None
         except McpError as e:
-            if not "Elicitation not supported" in e.args:
-                logger.error(f"Error eliciting GITHUB_TOKEN: {e}")
+            if "Elicitation not supported" not in e.args:
+                await ctx.error(f"Error eliciting GITHUB_TOKEN: {e}")
             return None
     else:
         return token
@@ -284,11 +289,10 @@ async def search_security_and_compliance_best_practices_content(
         # If both searches failed, return an error
         if not aws_docs_results and not github_results:
             error_msg = "Failed to retrieve search results from both AWS documentation and GitHub repositories"
-            logger.error(error_msg)
+            await ctx.error(error_msg)
             return [SearchResult(rank_order=1, url="", title=error_msg, context=None)]
     except Exception as e:
         error_msg = f"Error searching documentation: {str(e)}"
-        logger.error(error_msg)
         await ctx.error(error_msg)
         return [SearchResult(rank_order=1, url="", title=error_msg, context=None)]
 
@@ -323,7 +327,7 @@ async def search_security_and_compliance_best_practices_content(
     # Sort by rank_order and limit results
     combined_results.sort(key=lambda x: x.rank_order)
 
-    logger.debug(
+    await ctx.debug(
         f"Found {len(combined_results)} security-focused search results for: {search_phrase}"
     )
     return combined_results
@@ -388,13 +392,12 @@ async def recommend(
         List of recommended security pages with URLs, titles, and context
     """
     url_str = str(url)
-    logger.debug(f"Getting security recommendations for: {url_str}")
+    await ctx.debug(f"Getting security recommendations for: {url_str}")
 
     try:
         results = await get_recommendations(ctx, url_str)
     except Exception as e:
         error_msg = f"Error getting security recommendations: {str(e)}"
-        logger.error(error_msg)
         await ctx.error(error_msg)
         return [RecommendationResult(url="", title=error_msg, context=None)]
 
@@ -441,13 +444,14 @@ async def recommend(
         remaining_results = [r for r in results if r not in security_results]
         security_results.extend(remaining_results[: limit - len(security_results)])
 
-    logger.debug(f"Found {len(security_results)} security-focused recommendations for: {url_str}")
+    await ctx.debug(
+        f"Found {len(security_results)} security-focused recommendations for: {url_str}"
+    )
     return security_results
 
 
 def main():
     """Run the MCP server with CLI argument support."""
-    logger.info("Starting AWS Security Reference Architecture MCP Server")
     MCP.run()
 
 

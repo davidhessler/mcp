@@ -1,11 +1,10 @@
-from operator import truediv
-
-import pytest
-
-from awslabs.aws_sra_mcp_server.server import MCP
-from fastmcp import Client
 import json
 import os
+
+import pytest
+from fastmcp import Client
+
+from awslabs.aws_sra_mcp_server.server import MCP
 
 client = Client(MCP)
 

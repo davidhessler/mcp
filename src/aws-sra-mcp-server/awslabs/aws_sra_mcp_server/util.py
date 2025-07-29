@@ -13,9 +13,11 @@
 # limitations under the License.
 """Utility functions for AWS Security Reference Architecture MCP Server."""
 
-import markdownify
-from awslabs.aws_sra_mcp_server.models import RecommendationResult
 from typing import Any, Dict, List
+
+import markdownify
+
+from awslabs.aws_sra_mcp_server.models import RecommendationResult
 
 
 def extract_content_from_html(html: str) -> str:

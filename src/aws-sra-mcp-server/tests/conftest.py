@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List, Tuple
+
 import pytest
-from mcp.server.fastmcp import Context
-from typing import Any, List, Tuple
 from fastmcp import Client
+
 from awslabs.aws_sra_mcp_server.server import MCP
 
 

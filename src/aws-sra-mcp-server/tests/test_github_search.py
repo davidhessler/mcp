@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
-from awslabs.aws_sra_mcp_server.github import search_github, SRA_REPOSITORIES
+
+from awslabs.aws_sra_mcp_server.github import SRA_REPOSITORIES, search_github
 
 
 @pytest.mark.asyncio

@@ -13,36 +13,26 @@
 # limitations under the License.
 """GitHub search functionality for AWS Security Reference Architecture MCP Server."""
 
-from awslabs.aws_sra_mcp_server.server_utils import read_documentation_html
-
 import httpx
 import asyncio
 import random
 from typing import List, Dict, Any
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from tenacity import retry, stop_after_attempt, wait_exponential_jitter, retry_if_exception_type
 
 from mcp.server.fastmcp import Context
 
+from awslabs.aws_sra_mcp_server.consts import GITHUB_API_URL, SRA_REPOSITORIES
 from awslabs.aws_sra_mcp_server.models import SearchResult
 from awslabs.aws_sra_mcp_server.server_utils import log_truncation
 from awslabs.aws_sra_mcp_server.util import format_result
-
-# GitHub API URL
-GITHUB_API_URL = "https://api.github.com"
-
-# SRA GitHub repositories to search
-SRA_REPOSITORIES = [
-    "awslabs/sra-verify",
-    "aws-samples/aws-security-reference-architecture-examples",
-]
+from awslabs.aws_sra_mcp_server.server_utils import read_documentation_html
 
 
 # Define retry decorator for HTTP requests
 @retry(
     retry=retry_if_exception_type((httpx.HTTPError, httpx.NetworkError, httpx.TimeoutException)),
     stop=stop_after_attempt(5),
-    wait=wait_exponential(multiplier=1, min=1, max=60),
-    before_sleep=lambda retry_state: random.uniform(0, 1),  # Add jitter
+    wait=wait_exponential_jitter(max=60),
 )
 async def _http_get_with_retry(client: httpx.AsyncClient, url: str, **kwargs) -> httpx.Response:
     """Make an HTTP GET request with exponential backoff retry logic."""
@@ -275,7 +265,7 @@ async def get_issue_markdown(
                 comments = await __get_comments_str(ctx, comment_url)
                 parts.append(comments)
             content = "".join(parts)
-            log_truncation(content, start_index=start_index, max_length=max_length)
+            await log_truncation(ctx, content, start_index=start_index, max_length=max_length)
             return format_result(
                 url=issue_url,
                 content=content,
@@ -335,7 +325,7 @@ async def get_pr_markdown(ctx: Context, pr_url: str, max_length: int, start_inde
                 comments = await __get_comments_str(ctx, comment_url)
                 parts.append(comments)
             content = "".join(parts)
-            log_truncation(content, start_index=start_index, max_length=max_length)
+            await log_truncation(ctx, content, start_index=start_index, max_length=max_length)
             return format_result(
                 url=pr_url,
                 content=content,
@@ -370,7 +360,7 @@ async def get_raw_code(
         try:
             response = client.get(raw_url)
             response.raise_for_status()
-            log_truncation(response.text, start_index, max_length)
+            await log_truncation(ctx, response.text, start_index, max_length)
             return format_result(
                 url=code_url,
                 content=response.text,

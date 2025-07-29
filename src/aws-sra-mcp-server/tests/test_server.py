@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest.mock import patch
+
 import pytest
-import pytest_asyncio
-from unittest.mock import patch, AsyncMock, MagicMock
 
 
 @pytest.mark.asyncio

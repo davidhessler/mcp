@@ -13,8 +13,8 @@
 # limitations under the License.
 
 from awslabs.aws_sra_mcp_server.util import (
-    is_html_content,
     format_result,
+    is_html_content,
     parse_recommendation_results,
 )
 

@@ -13,24 +13,22 @@
 # limitations under the License.
 """AWS Documentation search functionality for AWS Security Reference Architecture MCP Server."""
 
-from http.client import responses
-
-from httpx import AsyncClient
 from asyncio import gather
-from typing import List, Dict, Any, Tuple
-from awslabs.aws_sra_mcp_server.models import SearchResult, RecommendationResult
-from awslabs.aws_sra_mcp_server import DEFAULT_USER_AGENT
-from fastmcp import Context
-from functools import partial
+from typing import Any, Dict, List
 from uuid import uuid4
 
-# API URLs
-SEARCH_API_URL = "https://proxy.search.docs.aws.amazon.com/search"
-RECOMMENDATIONS_API_URL = "https://contentrecs-api.docs.aws.amazon.com/v1/recommendations"
-SESSION_UUID = str(uuid4())
+from fastmcp import Context
+from httpx import AsyncClient
 
-# Maximum number of concurrent requests
-MAX_CONCURRENT_REQUESTS = 5
+from awslabs.aws_sra_mcp_server.consts import (
+    DEFAULT_USER_AGENT,
+    SEARCH_API_URL,
+    RECOMMENDATIONS_API_URL,
+    MAX_CONCURRENT_REQUESTS,
+)
+from awslabs.aws_sra_mcp_server.models import RecommendationResult, SearchResult
+
+SESSION_UUID = str(uuid4())
 
 
 def parse_recommendation_results(data: Dict[str, Any]) -> List[RecommendationResult]:
@@ -61,7 +59,8 @@ def parse_recommendation_results(data: Dict[str, Any]) -> List[RecommendationRes
             intent = intent_group.get("intent", "")
             if "urls" in intent_group:
                 process_items(
-                    intent_group["urls"], lambda _: f"Intent: {intent}" if intent else None
+                    intent_group["urls"],
+                    lambda _, inner_intent=intent: f"Intent: {inner_intent}" if intent else None,
                 )
 
     if "new" in data and "items" in data["new"]:
@@ -212,7 +211,7 @@ async def get_multiple_recommendations(
 
     # Create a client for AWS documentation recommendations
     #  amazonq-ignore-next-line
-    async with httpx.AsyncClient() as client:
+    async with AsyncClient() as client:
         try:
             # Execute requests in batches to avoid overwhelming the API
             for i in range(0, len(urls), MAX_CONCURRENT_REQUESTS):

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from awslabs.aws_sra_mcp_server.models import SearchResult, RecommendationResult
+from awslabs.aws_sra_mcp_server.models import RecommendationResult, SearchResult
 
 
 def test_search_result_model():

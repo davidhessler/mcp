@@ -13,11 +13,13 @@
 # limitations under the License.
 
 import os
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import patch, AsyncMock
-from awslabs.aws_sra_mcp_server.util import extract_content_from_html
-from awslabs.aws_sra_mcp_server.server import MCP
 from fastmcp import Client
+
+from awslabs.aws_sra_mcp_server.server import MCP
+from awslabs.aws_sra_mcp_server.util import extract_content_from_html
 
 
 @pytest.fixture

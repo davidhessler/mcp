@@ -81,3 +81,13 @@ line-length = 100
 target-version = "py39"
 select = ["E", "F", "B", "I"]
 ignore = []
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+   version = "0.1.0"
+   tag_format = "$version"
+   version_files = [
+       "pyproject.toml:version",
+       "awslabs/aws-sra-mcp-server/__init__.py:__version__"
+   ]
+   update_changelog_on_bump = true
