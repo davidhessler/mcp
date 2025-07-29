@@ -3,6 +3,7 @@ import os
 
 import pytest
 from fastmcp import Client
+from mcp.types import TextContent
 
 from awslabs.aws_sra_mcp_server.server import MCP
 
@@ -23,6 +24,7 @@ async def test_search_security_and_compliance_best_practices_content_unauthentic
             "https://github.com/aws-samples/aws-security-reference-architecture-examples/issues/233",
         ]
         found_urls = 0
+        assert isinstance(result.content[0], TextContent)
         for c in json.loads(result.content[0].text):
             if c["url"] in expected_url:
                 found_urls += 1
@@ -50,6 +52,7 @@ async def test_search_security_and_compliance_best_practices_content_authenticat
             "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/architecture.html",
         ]
         found_urls = 0
+        assert isinstance(result.content[0], TextContent)
         for c in json.loads(result.content[0].text):
             if c["url"] in expected_url:
                 found_urls += 1
@@ -68,6 +71,7 @@ async def test_read_security_and_compliance_best_practices_content_prescriptive_
             },
         )
         assert len(result.content) > 0
+        assert isinstance(result.content[0], TextContent)
         text_result = result.content[0].text
         assert text_result.startswith("AWS Security Reference Architecture Documentation")
 
@@ -86,6 +90,7 @@ async def test_read_security_and_compliance_best_practices_content_prescriptive_
             },
         )
         assert len(result.content) > 0
+        assert isinstance(result.content[0], TextContent)
         text_result = result.content[0].text
         assert "No more content available" in text_result
 
@@ -102,6 +107,7 @@ async def test_read_security_and_compliance_best_practices_content_github_issues
             },
         )
         assert len(result.content) > 0
+        assert isinstance(result.content[0], TextContent)
         text_result = result.content[0].text
         assert text_result.startswith(
             "AWS Security Reference Architecture GitHub Issue from https://github.com/aws-samples/aws-security-reference-architecture-examples/issues/225:\n\n"
@@ -117,6 +123,7 @@ async def test_read_security_and_compliance_best_practices_content_github_pr():
             "read_security_and_compliance_best_practices_content", {"url": url, "start_index": 0}
         )
         assert len(result.content) > 0
+        assert isinstance(result.content[0], TextContent)
         text_result = result.content[0].text
         if text_result.startswith(f"AWS Security Reference Architecture Pull Request from {url}"):
             assert True
@@ -136,6 +143,7 @@ async def test_read_security_and_compliance_best_practices_content_github_code()
             },
         )
         assert len(result.content) > 0
+        assert isinstance(result.content[0], TextContent)
         text_result = result.content[0].text
         assert "# SPDX-License-Identifier: MIT-0" in text_result
         assert (

@@ -17,7 +17,7 @@ import asyncio
 from typing import Any, Dict, List
 
 import httpx
-from mcp.server.fastmcp import Context
+from fastmcp import Context
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential_jitter
 
 from awslabs.aws_sra_mcp_server.consts import GITHUB_API_URL, SRA_REPOSITORIES
@@ -149,7 +149,7 @@ async def _search_issues_or_prs(
 
 
 async def search_github(
-    ctx: Context, search_phrase: str, limit: int = 10, github_token: str = None
+    ctx: Context, search_phrase: str, limit: int = 10, github_token: str | None = None
 ) -> List[SearchResult]:
     """
     Search GitHub repositories for AWS Security Reference Architecture content.
@@ -193,25 +193,28 @@ async def search_github(
 
                 # Process issue search results
                 for i, item in enumerate(issue_items):
+                    body = item.get("body")
+                    if body and isinstance(body, str) and len(body) > 200:
+                        body = body[:200] + "..."
+
                     result = SearchResult(
                         rank_order=i + len(results) + 1,
                         url=item.get("html_url", ""),
                         title=f"[Issue] {item.get('title', '')} - {repo}",
-                        context=item.get("body", "")[:200] + "..."
-                        if item.get("body") and len(item.get("body")) > 200
-                        else item.get("body", ""),
+                        context=body,
                     )
                     results.append(result)
 
                 # Process PR search results
                 for i, item in enumerate(pr_items):
+                    body = item.get("body")
+                    if body and isinstance(body, str) and len(body) > 200:
+                        body = body[:200] + "..."
                     result = SearchResult(
                         rank_order=i + len(results) + 1,
                         url=item.get("html_url", ""),
                         title=f"[PR] {item.get('title', '')} - {repo}",
-                        context=item.get("body", "")[:200] + "..."
-                        if item.get("body") and len(item.get("body")) > 200
-                        else item.get("body", ""),
+                        context=body
                     )
                     results.append(result)
 

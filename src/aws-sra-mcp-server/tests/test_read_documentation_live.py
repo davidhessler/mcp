@@ -17,6 +17,7 @@ from unittest.mock import patch
 
 import pytest
 from fastmcp import Client
+from mcp.types import TextContent
 
 from awslabs.aws_sra_mcp_server.server import MCP
 from awslabs.aws_sra_mcp_server.util import extract_content_from_html
@@ -32,6 +33,7 @@ async def call_tool(client: Client, tool, **kwargs):
     result = await client.call_tool(tool, kwargs)
     # Extract the text content from the result
     if hasattr(result, "content") and len(result.content) > 0:
+        assert isinstance(result.content[0], TextContent)
         return result.content[0].text
     return result
 
@@ -96,6 +98,7 @@ async def test_read_documentation_with_pagination(mock_read_impl, client):
             max_length=10,
             start_index=0,
         )
+        assert isinstance(result1, str)
         assert "Part 1" in result1
         assert "start_index=6" in result1
 
@@ -107,6 +110,7 @@ async def test_read_documentation_with_pagination(mock_read_impl, client):
             max_length=10,
             start_index=6,
         )
+        assert isinstance(result2, str)
         assert "Part 2" in result2
         assert "start_index=12" in result2
 
@@ -118,5 +122,6 @@ async def test_read_documentation_with_pagination(mock_read_impl, client):
             max_length=10,
             start_index=12,
         )
+        assert isinstance(result3, str)
         assert "Part 3" in result3
         assert "Content truncated" not in result3

@@ -16,6 +16,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastmcp import Client
+from mcp.types import TextContent
 
 from awslabs.aws_sra_mcp_server.server import MCP
 
@@ -92,6 +93,7 @@ async def test_recommend_filters_security_results(mock_client, client):
     # Verify that we got results
     assert results is not None
     assert len(results.content) > 0
+    assert isinstance(results.content[0], TextContent)
     assert len(json.loads(results.content[0].text)) > 0
 
 

@@ -15,7 +15,7 @@ from importlib.metadata import version
 from typing import Callable, Optional
 
 import httpx
-from mcp.server.fastmcp import Context
+from fastmcp import Context
 
 from awslabs.aws_sra_mcp_server.consts import DEFAULT_USER_AGENT
 from awslabs.aws_sra_mcp_server.util import (
