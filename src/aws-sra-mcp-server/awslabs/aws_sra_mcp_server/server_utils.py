@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from importlib.metadata import version
 from typing import Callable, Optional
 
 import httpx
@@ -23,6 +22,7 @@ from awslabs.aws_sra_mcp_server.util import (
     format_result,
     is_html_content,
 )
+
 
 async def _fetch_url(ctx: Context, url_str: str, session_uuid: str) -> tuple[str, Optional[str]]:
     """Fetch URL content and return (content, error_msg).

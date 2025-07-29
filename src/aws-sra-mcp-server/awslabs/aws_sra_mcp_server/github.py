@@ -214,7 +214,7 @@ async def search_github(
                         rank_order=i + len(results) + 1,
                         url=item.get("html_url", ""),
                         title=f"[PR] {item.get('title', '')} - {repo}",
-                        context=body
+                        context=body,
                     )
                     results.append(result)
 
