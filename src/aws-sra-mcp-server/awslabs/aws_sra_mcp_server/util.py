@@ -173,16 +173,20 @@ def format_result(
     original_length = len(content)
 
     if start_index >= original_length:
-        return (f"AWS Security Reference Architecture {content_type} from {url}:\n\n<e>No more "
-                f"content available.</e>")
+        return (
+            f"AWS Security Reference Architecture {content_type} from {url}:\n\n<e>No more "
+            f"content available.</e>"
+        )
 
     # Calculate the end index, ensuring we don't go beyond the content length
     end_index = min(start_index + max_length, original_length)
     truncated_content = content[start_index:end_index]
 
     if not truncated_content:
-        return (f"AWS Security Reference Architecture {content_type} from {url}:\n\n<e>No more "
-                f"content available.</e>")
+        return (
+            f"AWS Security Reference Architecture {content_type} from {url}:\n\n<e>No more "
+            f"content available.</e>"
+        )
 
     actual_content_length = len(truncated_content)
     remaining_content = original_length - (start_index + actual_content_length)
@@ -194,8 +198,10 @@ def format_result(
     # Only add the prompt to continue fetching if there is still remaining content
     if remaining_content > 0:
         next_start = start_index + actual_content_length
-        result += (f"\n\n<e>Content truncated. Call the read_documentation tool with "
-                   f"start_index={next_start} to get more content.</e>")
+        result += (
+            f"\n\n<e>Content truncated. Call the read_documentation tool with "
+            f"start_index={next_start} to get more content.</e>"
+        )
 
     return result
 

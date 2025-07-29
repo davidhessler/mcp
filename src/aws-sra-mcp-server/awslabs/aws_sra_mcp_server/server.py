@@ -73,7 +73,7 @@ MCP = FastMCP(
 
     - For long documentation pages, make multiple calls to `read_documentation` with different
       `start_index` values for pagination
-    - For very long documents (>30,000 characters), stop reading if you've found the needed 
+    - For very long documents (>30,000 characters), stop reading if you've found the needed
       information
     - When searching, use specific security and compliance terms rather than general phrases
     - Use `recommend` tool to discover related content that might not appear in search results
@@ -143,7 +143,7 @@ async def read_security_and_compliance_best_practices_content(
     ),
     start_index: int = Field(
         default=0,
-        # noqa: E501
+        # ruff: noqa: E501
         description="On return output starting at this character index, useful if a previous fetch was truncated and more content is required.",
         ge=0,
     ),
@@ -346,9 +346,7 @@ async def search_security_and_compliance_best_practices_content(
 @MCP.tool()
 async def recommend(
     ctx: Context,
-    url: str = Field(
-        description="URL of the SRA page to get recommendations for"
-    ),
+    url: str = Field(description="URL of the SRA page to get recommendations for"),
     limit: int = Field(
         default=10,
         description="Maximum number of results to return",

@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from unittest.mock import patch
+
 import pytest
+
 
 @pytest.mark.asyncio
 @patch("awslabs.aws_sra_mcp_server.github.search_github")

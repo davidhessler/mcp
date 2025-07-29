@@ -32,8 +32,8 @@ async def test_search_security_and_compliance_best_practices_content_unauthentic
 @pytest.mark.skipif(
     os.environ.get("GITHUB_TOKEN") is None,
     reason="Code Search requires authenticated API calls. This tests ensure code results are "
-           "returned in the result. So, this test will only successed if GITHUB_TOKEN environment "
-           "variable to be set with a personal access token",
+    "returned in the result. So, this test will only successed if GITHUB_TOKEN environment "
+    "variable to be set with a personal access token",
 )
 @pytest.mark.asyncio
 async def test_search_security_and_compliance_best_practices_content_authenticated():
@@ -73,7 +73,7 @@ async def test_read_security_and_compliance_best_practices_content_prescriptive_
 
 
 @pytest.mark.asyncio
-# noqa: E501
+# ruff: noqa: E501
 async def test_read_security_and_compliance_best_practices_content_prescriptive_guidance_no_more_content():
     """Tests search documentation"""
     async with client:
