@@ -107,20 +107,20 @@ async def get_github_token(ctx: Context) -> str | None:
                 message="GITHUB_TOKEN not set in environment variables. Provide a GITHUB_TOKEN.",
                 response_type=str,
             )
-            match result:
-                case AcceptedElicitation(data=token):
-                    print("Received GITHUB TOKEN from user. Continuing")
-                    return token
-                case DeclinedElicitation():
-                    print(
-                        "User declined to provide GITHUB TOKEN. Continuing without GitHub search."
-                    )
-                    return ""
-                case CancelledElicitation():
-                    print("User cancelled. Exiting.")
-                    return None
-                case _:
-                    return None
+            if isinstance(result, AcceptedElicitation):
+                token = result.data
+                print("Received GITHUB TOKEN from user. Continuing")
+                return token
+            elif isinstance(result, DeclinedElicitation):
+                print(
+                    "User declined to provide GITHUB TOKEN. Continuing without GitHub search."
+                )
+                return ""
+            elif isinstance(result, CancelledElicitation):
+                print("User cancelled. Exiting.")
+                return None
+            else:
+                return None
         except McpError as e:
             if "Elicitation not supported" not in e.args:
                 await ctx.error(f"Error eliciting GITHUB_TOKEN: {e}")
