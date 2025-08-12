@@ -149,7 +149,35 @@ async def _execute_recommendation_request(client: AsyncClient, url: str) -> Dict
         response.raise_for_status()
         return response.json()
     except Exception:
+}
+
+    try:
+        response = await client.post(search_url_with_session, json=request_body, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        await ctx.error(f"Error executing search request: {e}")  # import logging
         return {}
+
+
+async def _execute_recommendation_request(client: AsyncClient, url: str) -> Dict[str, Any]:
+    """Execute a recommendation request to AWS documentation API."""
+    recommendation_url = f"{RECOMMENDATIONS_API_URL}?path={url}&session={SESSION_UUID}"
+    headers = {"User-Agent": DEFAULT_USER_AGENT}
+
+    try:
+        response = await client.get(recommendation_url, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        await ctx.error(f"Error executing recommendation request: {e}")  # import logging
+        return {}
+
+
+async def search_sra_documentation(
+    ctx: Context, search_phrase: str, limit: int = 10
+) -> List[SearchResult]:
+    """
 
 
 async def search_sra_documentation(
