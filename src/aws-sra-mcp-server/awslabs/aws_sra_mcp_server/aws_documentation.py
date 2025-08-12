@@ -28,7 +28,14 @@ from awslabs.aws_sra_mcp_server.consts import (
 )
 from awslabs.aws_sra_mcp_server.models import RecommendationResult, SearchResult
 
-SESSION_UUID = str(uuid4())
+)
+from awslabs.aws_sra_mcp_server.models import RecommendationResult, SearchResult
+
+# Remove the global SESSION_UUID
+# SESSION_UUID = str(uuid4())
+
+
+def parse_recommendation_results(data: Dict[str, Any]) -> List[RecommendationResult]:
 
 
 def parse_recommendation_results(data: Dict[str, Any]) -> List[RecommendationResult]:
