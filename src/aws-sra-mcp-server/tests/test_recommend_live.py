@@ -86,8 +86,7 @@ async def test_recommend_filters_security_results(mock_get_recommendations, clie
     security_count = sum(
         1
         for item in result_data
-        if "security" in item["title"].lower() or
-        "security" in item.get("context", "").lower()
+        if "security" in item["title"].lower() or "security" in item.get("context", "").lower()
     )
     assert security_count > 0
 
@@ -112,6 +111,5 @@ async def test_recommend_error_handling(mock_get_recommendations, client):
     assert "result" in results.structured_content
     assert len(results.structured_content["result"]) > 0
     assert (
-        "Error getting security recommendations" in
-        results.structured_content["result"][0]["title"]
+        "Error getting security recommendations" in results.structured_content["result"][0]["title"]
     )
