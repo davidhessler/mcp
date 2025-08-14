@@ -357,7 +357,15 @@ async def get_raw_code(
     """
     raw_url = code_url.replace("github.com", "raw.githubusercontent.com")
     raw_url = raw_url.replace("/blob/", "/")
-    with httpx.Client(timeout=30.0) as client:
+"""
+    raw_url = code_url.replace("github.com", "raw.githubusercontent.com")
+    raw_url = raw_url.replace("/blob/", "/")
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        try:
+            response = await client.get(raw_url)
+            response.raise_for_status()
+            await log_truncation(ctx, response.text, start_index, max_length)
+            return format_result(
         try:
             response = client.get(raw_url)
             response.raise_for_status()
