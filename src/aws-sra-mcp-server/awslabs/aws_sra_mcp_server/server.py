@@ -31,6 +31,7 @@ from awslabs.aws_sra_mcp_server.aws_documentation import (
     get_recommendations,
     search_sra_documentation,
 )
+
 from awslabs.aws_sra_mcp_server.consts import SECURITY_KEYWORDS
 
 # Import search functionality
