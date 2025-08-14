@@ -15,7 +15,6 @@
 
 from asyncio import gather
 from typing import Any, Dict, List
-from uuid import uuid4
 
 from fastmcp import Context
 from httpx import AsyncClient
@@ -28,15 +27,8 @@ from awslabs.aws_sra_mcp_server.consts import (
 )
 from awslabs.aws_sra_mcp_server.models import RecommendationResult, SearchResult
 
-)
 from awslabs.aws_sra_mcp_server.models import RecommendationResult, SearchResult
-
-# Remove the global SESSION_UUID
-# SESSION_UUID = str(uuid4())
-
-
-def parse_recommendation_results(data: Dict[str, Any]) -> List[RecommendationResult]:
-
+from awslabs.aws_sra_mcp_server import SESSION_UUID
 
 def parse_recommendation_results(data: Dict[str, Any]) -> List[RecommendationResult]:
     """Parse recommendation API response into RecommendationResult objects.
@@ -139,28 +131,7 @@ async def _execute_search_request(client: AsyncClient, search_phrase: str) -> Di
         return {}
 
 
-async def _execute_recommendation_request(client: AsyncClient, url: str) -> Dict[str, Any]:
-    """Execute a recommendation request to AWS documentation API."""
-    recommendation_url = f"{RECOMMENDATIONS_API_URL}?path={url}&session={SESSION_UUID}"
-    headers = {"User-Agent": DEFAULT_USER_AGENT}
-
-    try:
-        response = await client.get(recommendation_url, headers=headers)
-        response.raise_for_status()
-        return response.json()
-    except Exception:
-}
-
-    try:
-        response = await client.post(search_url_with_session, json=request_body, headers=headers)
-        response.raise_for_status()
-        return response.json()
-    except Exception as e:
-        await ctx.error(f"Error executing search request: {e}")  # import logging
-        return {}
-
-
-async def _execute_recommendation_request(client: AsyncClient, url: str) -> Dict[str, Any]:
+async def _execute_recommendation_request(ctx: Context, client: AsyncClient, url: str) -> Dict[str, Any]:
     """Execute a recommendation request to AWS documentation API."""
     recommendation_url = f"{RECOMMENDATIONS_API_URL}?path={url}&session={SESSION_UUID}"
     headers = {"User-Agent": DEFAULT_USER_AGENT}
@@ -170,14 +141,8 @@ async def _execute_recommendation_request(client: AsyncClient, url: str) -> Dict
         response.raise_for_status()
         return response.json()
     except Exception as e:
-        await ctx.error(f"Error executing recommendation request: {e}")  # import logging
+        await ctx.error(f"Error executing recommendation request: {e}")
         return {}
-
-
-async def search_sra_documentation(
-    ctx: Context, search_phrase: str, limit: int = 10
-) -> List[SearchResult]:
-    """
 
 
 async def search_sra_documentation(

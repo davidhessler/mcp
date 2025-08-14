@@ -31,7 +31,6 @@ from awslabs.aws_sra_mcp_server.aws_documentation import (
     get_recommendations,
     search_sra_documentation,
 )
-
 from awslabs.aws_sra_mcp_server.consts import SECURITY_KEYWORDS
 
 # Import search functionality
@@ -53,7 +52,9 @@ from awslabs.aws_sra_mcp_server.server_utils import (
     read_other,
 )
 
-SESSION_UUID = str(uuid.uuid4())
+import asyncio
+
+from awslabs.aws_sra_mcp_server import SESSION_UUID
 
 MCP = FastMCP(
     "awslabs.aws-sra-mcp-server",
@@ -275,8 +276,6 @@ async def search_content(
     Returns:
         List of security-focused search results with URLs, titles, and context snippets
     """
-    import asyncio
-
     await ctx.debug(
         f"Searching AWS Security Reference Architecture documentation for: {search_phrase}"
     )

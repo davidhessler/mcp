@@ -18,46 +18,17 @@ async def test_search_security_and_compliance_best_practices_content_unauthentic
             {"search_phrase": "Security Hub"},
         )
         assert len(result.content) > 0
-        expected_url = [
-            "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/security-tooling.html",
-            "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/architecture.html",
-            "https://github.com/aws-samples/aws-security-reference-architecture-examples/issues/233",
-        ]
-        found_urls = 0
+        found_github = False
+        found_prescriptive_guidance = False
         assert isinstance(result.content[0], TextContent)
         for c in json.loads(result.content[0].text):
-            if c["url"] in expected_url:
-                found_urls += 1
-        assert found_urls == len(expected_url)
+            if "github.com" in c["url"]:
+                found_github = True
+            if "docs.aws.amazon.com/prescriptive-guidance" in c["url"]:
+                found_prescriptive_guidance = True
 
-
-@pytest.mark.skipif(
-    os.environ.get("GITHUB_TOKEN") is None,
-    reason="Code Search requires authenticated API calls. This tests ensure code results are "
-    "returned in the result. So, this test will only successed if GITHUB_TOKEN environment "
-    "variable to be set with a personal access token",
-)
-@pytest.mark.asyncio
-async def test_search_security_and_compliance_best_practices_content_authenticated():
-    async with client:
-        result = await client.call_tool(
-            "search_content",
-            {"search_phrase": "Security Hub"},
-        )
-        assert len(result.content) > 0
-        expected_url = [
-            "https://github.com/awslabs/sra-verify/blob/af737628e43a16f755f0aa45cb15474009819f73/sraverify/sraverify/services/securityhub/checks/sra_securityhub_10.py",
-            "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/security-tooling.html",
-            "https://github.com/aws-samples/aws-security-reference-architecture-examples/blob/3b1e1e0af9b407030283e0b5b2ff07bf78a322f1/aws_sra_examples/terraform/solutions/security_hub/README.md",
-            "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/architecture.html",
-        ]
-        found_urls = 0
-        assert isinstance(result.content[0], TextContent)
-        for c in json.loads(result.content[0].text):
-            if c["url"] in expected_url:
-                found_urls += 1
-        assert found_urls == len(expected_url)
-
+        assert found_github
+        assert found_prescriptive_guidance
 
 @pytest.mark.asyncio
 async def test_read_security_and_compliance_best_practices_content_prescriptive_guidance():

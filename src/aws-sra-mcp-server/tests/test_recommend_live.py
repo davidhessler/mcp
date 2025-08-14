@@ -35,52 +35,39 @@ async def call_tool(client: Client, tool, **kwargs):
 
 
 @pytest.mark.asyncio
-@patch("awslabs.aws_sra_mcp_server.aws_documentation.AsyncClient")
-async def test_recommend_filters_security_results(mock_client, client):
+@patch("awslabs.aws_sra_mcp_server.server.get_recommendations")
+async def test_recommend_filters_security_results(mock_get_recommendations, client):
     """Test that recommend filters results to prioritize security-related content."""
-    # Setup mock response with mixed results
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {
-        "highlyRated": {
-            "items": [
-                {
-                    "url": "https://docs.aws.amazon.com/security-hub/",
-                    "assetTitle": "AWS Security Hub",
-                    "abstract": "Security monitoring service",
-                },
-                {
-                    "url": "https://docs.aws.amazon.com/s3/",
-                    "assetTitle": "Amazon S3",
-                    "abstract": "Object storage service",
-                },
-                {
-                    "url": "https://docs.aws.amazon.com/macie/",
-                    "assetTitle": "Amazon Macie",
-                    "abstract": "Data security service",
-                },
-            ]
-        },
-        "similar": {
-            "items": [
-                {
-                    "url": "https://docs.aws.amazon.com/inspector/",
-                    "assetTitle": "Amazon Inspector",
-                    "abstract": "Vulnerability management service",
-                },
-                {
-                    "url": "https://docs.aws.amazon.com/ec2/",
-                    "assetTitle": "Amazon EC2",
-                    "abstract": "Virtual server service",
-                },
-            ]
-        },
-    }
-
-    # Setup mock client
-    mock_client_instance = AsyncMock()
-    mock_client_instance.__aenter__.return_value.get.return_value = mock_response
-    mock_client.return_value = mock_client_instance
+    from awslabs.aws_sra_mcp_server.models import RecommendationResult
+    
+    # Setup mock to return mixed results
+    mock_get_recommendations.return_value = [
+        RecommendationResult(
+            url="https://docs.aws.amazon.com/security-hub/",
+            title="AWS Security Hub",
+            context="Security monitoring service",
+        ),
+        RecommendationResult(
+            url="https://docs.aws.amazon.com/s3/",
+            title="Amazon S3",
+            context="Object storage service",
+        ),
+        RecommendationResult(
+            url="https://docs.aws.amazon.com/macie/",
+            title="Amazon Macie",
+            context="Data security service",
+        ),
+        RecommendationResult(
+            url="https://docs.aws.amazon.com/inspector/",
+            title="Amazon Inspector",
+            context="Vulnerability management service",
+        ),
+        RecommendationResult(
+            url="https://docs.aws.amazon.com/ec2/",
+            title="Amazon EC2",
+            context="Virtual server service",
+        ),
+    ]
 
     # Call the function
     async with client:
@@ -92,30 +79,33 @@ async def test_recommend_filters_security_results(mock_client, client):
 
     # Verify that we got results
     assert results is not None
-    assert len(results.content) > 0
-    assert isinstance(results.content[0], TextContent)
-    assert len(json.loads(results.content[0].text)) > 0
+    # Check structured_content which contains the actual result
+    assert 'result' in results.structured_content
+    assert len(results.structured_content['result']) > 0
+    
+    # Verify that security-related results are prioritized
+    result_data = results.structured_content['result']
+    security_count = sum(1 for item in result_data if 'security' in item['title'].lower() or 'security' in item.get('context', '').lower())
+    assert security_count > 0
 
 
 @pytest.mark.asyncio
-@patch("awslabs.aws_sra_mcp_server.aws_documentation.AsyncClient")
-async def test_recommend_error_handling(mock_client, client):
+@patch("awslabs.aws_sra_mcp_server.server.get_recommendations")
+async def test_recommend_error_handling(mock_get_recommendations, client):
     """Test error handling in the recommend function."""
     # Setup mock to raise an exception
-    mock_client_instance = AsyncMock()
-    mock_client_instance.__aenter__.return_value.get.side_effect = Exception("HTTP error")
-    mock_client.return_value = mock_client_instance
+    mock_get_recommendations.side_effect = Exception("HTTP error")
 
-    # Call the function with try/except to handle the exception
-    try:
-        async with client:
-            results = await call_tool(
-                client,
-                "recommend",
-                url="https://docs.aws.amazon.com/security-reference-architecture/welcome.html",
-            )
+    # Call the function
+    async with client:
+        results = await call_tool(
+            client,
+            "recommend",
+            url="https://docs.aws.amazon.com/security-reference-architecture/welcome.html",
+        )
 
-        # Verify the results - should return a list with an error message
-        assert len(results.content) == 0
-    except Exception as e:
-        pytest.fail(f"recommend should handle exceptions, but raised: {e}")
+    # Verify the results - should return a list with an error message
+    assert results is not None
+    assert 'result' in results.structured_content
+    assert len(results.structured_content['result']) > 0
+    assert "Error getting security recommendations" in results.structured_content['result'][0]['title']
