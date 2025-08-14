@@ -13,5 +13,3 @@
 # limitations under the License.
 import uuid
 __version__ = "0.1.0"
-
-SESSION_UUID = str(uuid.uuid4())

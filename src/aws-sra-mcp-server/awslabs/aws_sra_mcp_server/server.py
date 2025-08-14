@@ -54,7 +54,7 @@ from awslabs.aws_sra_mcp_server.server_utils import (
 
 import asyncio
 
-from awslabs.aws_sra_mcp_server import SESSION_UUID
+from awslabs.aws_sra_mcp_server.consts import SESSION_UUID
 
 MCP = FastMCP(
     "awslabs.aws-sra-mcp-server",
@@ -431,29 +431,7 @@ async def recommend(
         return [RecommendationResult(url="", title=error_msg, context=None)]
 
     # Filter results to prioritize security-related content
-    security_keywords = [
-        "security",
-        "compliance",
-        "governance",
-        "audit",
-        "protection",
-        "sra",
-        "reference architecture",
-        "securityhub",
-        "iam",
-        "identity",
-        "permission",
-        "encryption",
-        "kms",
-        "guard",
-        "firewall",
-        "waf",
-        "shield",
-        "detective",
-        "inspector",
-        "macie",
-        "security incident response",
-    ]
+
 
     security_results = []
     for result in results:
@@ -462,7 +440,7 @@ async def recommend(
             keyword in result.url.lower()
             or keyword in result.title.lower()
             or (result.context and keyword in result.context.lower())
-            for keyword in security_keywords
+            for keyword in SECURITY_KEYWORDS
         )
 
         if is_security_related:
@@ -473,9 +451,12 @@ async def recommend(
         remaining_results = [r for r in results if r not in security_results]
         security_results.extend(remaining_results[: limit - len(security_results)])
 
-    await ctx.debug(
-        f"Found {len(security_results)} security-focused recommendations for: {url_str}"
-    )
+    if len(security_results) > 0:
+        await ctx.debug(
+            f"Found {len(security_results)} using security-focused recommendations for: {url_str}"
+        )
+    else:
+        await ctx.debug(f"No security-focused recommendations for: {url_str}. Filtered results using {','.join(SECURITY_KEYWORDS)} keywords")
     return security_results
 
 

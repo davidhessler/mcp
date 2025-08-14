@@ -28,7 +28,7 @@ from awslabs.aws_sra_mcp_server.consts import (
 from awslabs.aws_sra_mcp_server.models import RecommendationResult, SearchResult
 
 from awslabs.aws_sra_mcp_server.models import RecommendationResult, SearchResult
-from awslabs.aws_sra_mcp_server import SESSION_UUID
+from awslabs.aws_sra_mcp_server.consts import SESSION_UUID
 
 def parse_recommendation_results(data: Dict[str, Any]) -> List[RecommendationResult]:
     """Parse recommendation API response into RecommendationResult objects.

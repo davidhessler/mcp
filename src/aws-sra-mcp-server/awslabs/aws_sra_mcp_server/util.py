@@ -17,6 +17,7 @@ from typing import Any, Dict, List
 
 import markdownify
 
+from awslabs.aws_sra_mcp_server.consts import CONTENT_SELECTORS, NAV_SELECTORS, TAGS_TO_STRIP
 from awslabs.aws_sra_mcp_server.models import RecommendationResult
 
 
@@ -43,20 +44,10 @@ def extract_content_from_html(html: str) -> str:
         main_content = None
 
         # Common content container selectors for AWS documentation
-        content_selectors = [
-            "main",
-            "article",
-            "#main-content",
-            ".main-content",
-            "#content",
-            ".content",
-            "div[role='main']",
-            "#awsdocs-content",
-            ".awsui-article",
-        ]
+
 
         # Try to find the main content using common selectors
-        for selector in content_selectors:
+        for selector in CONTENT_SELECTORS:
             content = soup.select_one(selector)
             if content:
                 main_content = content
@@ -66,62 +57,13 @@ def extract_content_from_html(html: str) -> str:
         if not main_content:
             main_content = soup.body if soup.body else soup
 
-        # Remove navigation elements that might be in the main content
-        nav_selectors = [
-            "noscript",
-            ".prev-next",
-            "#main-col-footer",
-            ".awsdocs-page-utilities",
-            "#quick-feedback-yes",
-            "#quick-feedback-no",
-            ".page-loading-indicator",
-            "#tools-panel",
-            ".doc-cookie-banner",
-            "awsdocs-copyright",
-            "awsdocs-thumb-feedback",
-        ]
 
-        for selector in nav_selectors:
+
+        for selector in NAV_SELECTORS:
             for element in main_content.select(selector):
                 element.decompose()
 
-        # Define tags to strip - these are elements we don't want in the output
-        tags_to_strip = [
-            "script",
-            "style",
-            "noscript",
-            "meta",
-            "link",
-            "footer",
-            "nav",
-            "aside",
-            "header",
-            # AWS documentation specific elements
-            "awsdocs-cookie-consent-container",
-            "awsdocs-feedback-container",
-            "awsdocs-page-header",
-            "awsdocs-page-header-container",
-            "awsdocs-filter-selector",
-            "awsdocs-breadcrumb-container",
-            "awsdocs-page-footer",
-            "awsdocs-page-footer-container",
-            "awsdocs-footer",
-            "awsdocs-cookie-banner",
-            # Common unnecessary elements
-            "js-show-more-buttons",
-            "js-show-more-text",
-            "feedback-container",
-            "feedback-section",
-            "doc-feedback-container",
-            "doc-feedback-section",
-            "warning-container",
-            "warning-section",
-            "cookie-banner",
-            "cookie-notice",
-            "copyright-section",
-            "legal-section",
-            "terms-section",
-        ]
+
 
         # Use markdownify on the cleaned HTML content
         content = markdownify.markdownify(
@@ -132,7 +74,7 @@ def extract_content_from_html(html: str) -> str:
             escape_asterisks=True,
             escape_underscores=True,
             newline_style="SPACES",
-            strip=tags_to_strip,
+            strip=TAGS_TO_STRIP,
         )
 
         if not content:

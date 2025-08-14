@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from awslabs.aws_sra_mcp_server import __version__
+from uuid import uuid4
 
 SECURITY_KEYWORDS = [
     "security",
@@ -58,3 +59,72 @@ SRA_REPOSITORIES = [
     "awslabs/sra-verify",
     "aws-samples/aws-security-reference-architecture-examples",
 ]
+
+# Session ID if needed
+SESSION_UUID = str(uuid4())
+
+# Content selectors when we expect the content to be when rendering HTML
+CONTENT_SELECTORS = [
+            "main",
+            "article",
+            "#main-content",
+            ".main-content",
+            "#content",
+            ".content",
+            "div[role='main']",
+            "#awsdocs-content",
+            ".awsui-article",
+        ]
+
+# Navigation elements that we don't want to parse when rendering HTML content
+NAV_SELECTORS = [
+    "noscript",
+    ".prev-next",
+    "#main-col-footer",
+    ".awsdocs-page-utilities",
+    "#quick-feedback-yes",
+    "#quick-feedback-no",
+    ".page-loading-indicator",
+    "#tools-panel",
+    ".doc-cookie-banner",
+    "awsdocs-copyright",
+    "awsdocs-thumb-feedback",
+]
+
+# Elements we don't want in the output when rendering HTML content
+TAGS_TO_STRIP = [
+            "script",
+            "style",
+            "noscript",
+            "meta",
+            "link",
+            "footer",
+            "nav",
+            "aside",
+            "header",
+            # AWS documentation specific elements
+            "awsdocs-cookie-consent-container",
+            "awsdocs-feedback-container",
+            "awsdocs-page-header",
+            "awsdocs-page-header-container",
+            "awsdocs-filter-selector",
+            "awsdocs-breadcrumb-container",
+            "awsdocs-page-footer",
+            "awsdocs-page-footer-container",
+            "awsdocs-footer",
+            "awsdocs-cookie-banner",
+            # Common unnecessary elements
+            "js-show-more-buttons",
+            "js-show-more-text",
+            "feedback-container",
+            "feedback-section",
+            "doc-feedback-container",
+            "doc-feedback-section",
+            "warning-container",
+            "warning-section",
+            "cookie-banner",
+            "cookie-notice",
+            "copyright-section",
+            "legal-section",
+            "terms-section",
+        ]
