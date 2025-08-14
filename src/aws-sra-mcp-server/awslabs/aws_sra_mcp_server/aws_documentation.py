@@ -24,11 +24,10 @@ from awslabs.aws_sra_mcp_server.consts import (
     MAX_CONCURRENT_REQUESTS,
     RECOMMENDATIONS_API_URL,
     SEARCH_API_URL,
+    SESSION_UUID,
 )
 from awslabs.aws_sra_mcp_server.models import RecommendationResult, SearchResult
 
-from awslabs.aws_sra_mcp_server.models import RecommendationResult, SearchResult
-from awslabs.aws_sra_mcp_server.consts import SESSION_UUID
 
 def parse_recommendation_results(data: Dict[str, Any]) -> List[RecommendationResult]:
     """Parse recommendation API response into RecommendationResult objects.
@@ -131,7 +130,9 @@ async def _execute_search_request(client: AsyncClient, search_phrase: str) -> Di
         return {}
 
 
-async def _execute_recommendation_request(ctx: Context, client: AsyncClient, url: str) -> Dict[str, Any]:
+async def _execute_recommendation_request(
+    ctx: Context, client: AsyncClient, url: str
+) -> Dict[str, Any]:
     """Execute a recommendation request to AWS documentation API."""
     recommendation_url = f"{RECOMMENDATIONS_API_URL}?path={url}&session={SESSION_UUID}"
     headers = {"User-Agent": DEFAULT_USER_AGENT}

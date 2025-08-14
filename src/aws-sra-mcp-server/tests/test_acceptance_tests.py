@@ -1,5 +1,4 @@
 import json
-import os
 
 import pytest
 from fastmcp import Client
@@ -29,6 +28,7 @@ async def test_search_security_and_compliance_best_practices_content_unauthentic
 
         assert found_github
         assert found_prescriptive_guidance
+
 
 @pytest.mark.asyncio
 async def test_read_security_and_compliance_best_practices_content_prescriptive_guidance():

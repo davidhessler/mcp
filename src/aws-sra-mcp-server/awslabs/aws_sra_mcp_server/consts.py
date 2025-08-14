@@ -11,8 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from awslabs.aws_sra_mcp_server import __version__
 from uuid import uuid4
+
+from awslabs.aws_sra_mcp_server import __version__
 
 SECURITY_KEYWORDS = [
     "security",
@@ -65,16 +66,16 @@ SESSION_UUID = str(uuid4())
 
 # Content selectors when we expect the content to be when rendering HTML
 CONTENT_SELECTORS = [
-            "main",
-            "article",
-            "#main-content",
-            ".main-content",
-            "#content",
-            ".content",
-            "div[role='main']",
-            "#awsdocs-content",
-            ".awsui-article",
-        ]
+    "main",
+    "article",
+    "#main-content",
+    ".main-content",
+    "#content",
+    ".content",
+    "div[role='main']",
+    "#awsdocs-content",
+    ".awsui-article",
+]
 
 # Navigation elements that we don't want to parse when rendering HTML content
 NAV_SELECTORS = [
@@ -93,38 +94,38 @@ NAV_SELECTORS = [
 
 # Elements we don't want in the output when rendering HTML content
 TAGS_TO_STRIP = [
-            "script",
-            "style",
-            "noscript",
-            "meta",
-            "link",
-            "footer",
-            "nav",
-            "aside",
-            "header",
-            # AWS documentation specific elements
-            "awsdocs-cookie-consent-container",
-            "awsdocs-feedback-container",
-            "awsdocs-page-header",
-            "awsdocs-page-header-container",
-            "awsdocs-filter-selector",
-            "awsdocs-breadcrumb-container",
-            "awsdocs-page-footer",
-            "awsdocs-page-footer-container",
-            "awsdocs-footer",
-            "awsdocs-cookie-banner",
-            # Common unnecessary elements
-            "js-show-more-buttons",
-            "js-show-more-text",
-            "feedback-container",
-            "feedback-section",
-            "doc-feedback-container",
-            "doc-feedback-section",
-            "warning-container",
-            "warning-section",
-            "cookie-banner",
-            "cookie-notice",
-            "copyright-section",
-            "legal-section",
-            "terms-section",
-        ]
+    "script",
+    "style",
+    "noscript",
+    "meta",
+    "link",
+    "footer",
+    "nav",
+    "aside",
+    "header",
+    # AWS documentation specific elements
+    "awsdocs-cookie-consent-container",
+    "awsdocs-feedback-container",
+    "awsdocs-page-header",
+    "awsdocs-page-header-container",
+    "awsdocs-filter-selector",
+    "awsdocs-breadcrumb-container",
+    "awsdocs-page-footer",
+    "awsdocs-page-footer-container",
+    "awsdocs-footer",
+    "awsdocs-cookie-banner",
+    # Common unnecessary elements
+    "js-show-more-buttons",
+    "js-show-more-text",
+    "feedback-container",
+    "feedback-section",
+    "doc-feedback-container",
+    "doc-feedback-section",
+    "warning-container",
+    "warning-section",
+    "cookie-banner",
+    "cookie-notice",
+    "copyright-section",
+    "legal-section",
+    "terms-section",
+]

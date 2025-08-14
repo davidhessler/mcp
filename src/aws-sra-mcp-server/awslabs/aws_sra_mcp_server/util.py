@@ -45,7 +45,6 @@ def extract_content_from_html(html: str) -> str:
 
         # Common content container selectors for AWS documentation
 
-
         # Try to find the main content using common selectors
         for selector in CONTENT_SELECTORS:
             content = soup.select_one(selector)
@@ -57,13 +56,9 @@ def extract_content_from_html(html: str) -> str:
         if not main_content:
             main_content = soup.body if soup.body else soup
 
-
-
         for selector in NAV_SELECTORS:
             for element in main_content.select(selector):
                 element.decompose()
-
-
 
         # Use markdownify on the cleaned HTML content
         content = markdownify.markdownify(

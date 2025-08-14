@@ -13,9 +13,9 @@
 # limitations under the License.
 """AWS Security Reference Architecture MCP Server implementation."""
 
+import asyncio
 import os
 import re
-import uuid
 from typing import List
 
 from fastmcp import Context, FastMCP
@@ -31,7 +31,7 @@ from awslabs.aws_sra_mcp_server.aws_documentation import (
     get_recommendations,
     search_sra_documentation,
 )
-from awslabs.aws_sra_mcp_server.consts import SECURITY_KEYWORDS
+from awslabs.aws_sra_mcp_server.consts import SECURITY_KEYWORDS, SESSION_UUID
 
 # Import search functionality
 from awslabs.aws_sra_mcp_server.github import (
@@ -51,10 +51,6 @@ from awslabs.aws_sra_mcp_server.server_utils import (
     read_documentation_markdown,
     read_other,
 )
-
-import asyncio
-
-from awslabs.aws_sra_mcp_server.consts import SESSION_UUID
 
 MCP = FastMCP(
     "awslabs.aws-sra-mcp-server",
@@ -432,7 +428,6 @@ async def recommend(
 
     # Filter results to prioritize security-related content
 
-
     security_results = []
     for result in results:
         # Check if any security keyword is in the URL, title, or context
@@ -456,7 +451,9 @@ async def recommend(
             f"Found {len(security_results)} using security-focused recommendations for: {url_str}"
         )
     else:
-        await ctx.debug(f"No security-focused recommendations for: {url_str}. Filtered results using {','.join(SECURITY_KEYWORDS)} keywords")
+        await ctx.debug(
+            f"No security-focused recommendations for: {url_str}. Filtered results using {','.join(SECURITY_KEYWORDS)} keywords"
+        )
     return security_results
 
 

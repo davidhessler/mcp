@@ -11,12 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from fastmcp import Client
-from mcp.types import TextContent
 
 from awslabs.aws_sra_mcp_server.server import MCP
 
@@ -39,7 +37,7 @@ async def call_tool(client: Client, tool, **kwargs):
 async def test_recommend_filters_security_results(mock_get_recommendations, client):
     """Test that recommend filters results to prioritize security-related content."""
     from awslabs.aws_sra_mcp_server.models import RecommendationResult
-    
+
     # Setup mock to return mixed results
     mock_get_recommendations.return_value = [
         RecommendationResult(
@@ -80,12 +78,17 @@ async def test_recommend_filters_security_results(mock_get_recommendations, clie
     # Verify that we got results
     assert results is not None
     # Check structured_content which contains the actual result
-    assert 'result' in results.structured_content
-    assert len(results.structured_content['result']) > 0
-    
+    assert "result" in results.structured_content
+    assert len(results.structured_content["result"]) > 0
+
     # Verify that security-related results are prioritized
-    result_data = results.structured_content['result']
-    security_count = sum(1 for item in result_data if 'security' in item['title'].lower() or 'security' in item.get('context', '').lower())
+    result_data = results.structured_content["result"]
+    security_count = sum(
+        1
+        for item in result_data
+        if "security" in item["title"].lower() or
+        "security" in item.get("context", "").lower()
+    )
     assert security_count > 0
 
 
@@ -106,6 +109,9 @@ async def test_recommend_error_handling(mock_get_recommendations, client):
 
     # Verify the results - should return a list with an error message
     assert results is not None
-    assert 'result' in results.structured_content
-    assert len(results.structured_content['result']) > 0
-    assert "Error getting security recommendations" in results.structured_content['result'][0]['title']
+    assert "result" in results.structured_content
+    assert len(results.structured_content["result"]) > 0
+    assert (
+        "Error getting security recommendations" in
+        results.structured_content["result"][0]["title"]
+    )
