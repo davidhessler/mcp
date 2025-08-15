@@ -82,7 +82,7 @@ async def test_get_github_token_cancelled_elicitation():
 async def test_get_github_token_mcp_error():
     """Test get_github_token when McpError occurs."""
     from awslabs.aws_sra_mcp_server.server import get_github_token
-    from mcp.shared.exceptions import ErrorData
+    from mcp.types import ErrorData
     
     mock_ctx = AsyncMock()
     error_data = ErrorData(code=-1, message="Elicitation not supported")
@@ -98,7 +98,7 @@ async def test_get_github_token_mcp_error():
 async def test_get_github_token_other_mcp_error():
     """Test get_github_token when other McpError occurs."""
     from awslabs.aws_sra_mcp_server.server import get_github_token
-    from mcp.shared.exceptions import ErrorData
+    from mcp.types import ErrorData
     
     mock_ctx = AsyncMock()
     error_data = ErrorData(code=-1, message="Other error")

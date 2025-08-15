@@ -121,7 +121,7 @@ async def test_fetch_url_http_error(mock_client, mock_context):
     content, error = await _fetch_url(mock_context, "https://example.com", "session-123")
 
     assert content == ""
-    assert "status code 404" in error
+    assert error is not None and "status code 404" in error
     assert len(mock_context.errors) == 1
 
 
@@ -136,8 +136,8 @@ async def test_fetch_url_exception(mock_client, mock_context):
     content, error = await _fetch_url(mock_context, "https://example.com", "session-123")
 
     assert content == ""
-    assert "Failed to fetch" in error
-    assert "Network error" in error
+    assert error is not None and "Failed to fetch" in error
+    assert error is not None and "Network error" in error
     assert len(mock_context.errors) == 1
 
 

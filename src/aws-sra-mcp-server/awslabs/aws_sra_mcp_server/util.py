@@ -21,7 +21,7 @@ from awslabs.aws_sra_mcp_server.consts import CONTENT_SELECTORS, NAV_SELECTORS, 
 from awslabs.aws_sra_mcp_server.models import RecommendationResult
 
 
-def extract_content_from_html(html: str) -> str:
+def extract_content_from_html(html: str | None) -> str:
     """Extract and convert HTML content to Markdown format.
 
     Args:
