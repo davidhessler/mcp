@@ -78,6 +78,7 @@ async def test_recommend_filters_security_results(mock_get_recommendations, clie
     # Verify that we got results
     assert results is not None
     # Check structured_content which contains the actual result
+    assert results.structured_content is not None
     assert "result" in results.structured_content
     assert len(results.structured_content["result"]) > 0
 
@@ -108,6 +109,7 @@ async def test_recommend_error_handling(mock_get_recommendations, client):
 
     # Verify the results - should return a list with an error message
     assert results is not None
+    assert results.structured_content is not None
     assert "result" in results.structured_content
     assert len(results.structured_content["result"]) > 0
     assert (

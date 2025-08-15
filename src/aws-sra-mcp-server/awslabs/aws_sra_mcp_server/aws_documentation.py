@@ -188,7 +188,7 @@ async def get_recommendations(ctx: Context, url: str) -> List[RecommendationResu
     # Create a client for AWS documentation recommendations with timeout
     async with AsyncClient(timeout=30.0) as client:
         try:
-            data = await _execute_recommendation_request(client, url)
+            data = await _execute_recommendation_request(ctx, client, url)
             return parse_recommendation_results(data)
         except Exception as e:
             await ctx.error(f"Error getting recommendations: {e}")
@@ -219,7 +219,7 @@ async def get_multiple_recommendations(
             # Execute requests in batches to avoid overwhelming the API
             for i in range(0, len(urls), MAX_CONCURRENT_REQUESTS):
                 batch = urls[i : i + MAX_CONCURRENT_REQUESTS]
-                batch_tasks = [_execute_recommendation_request(client, url) for url in batch]
+                batch_tasks = [_execute_recommendation_request(ctx, client, url) for url in batch]
                 batch_results = await gather(*batch_tasks)
 
                 # Process results for this batch
