@@ -21,7 +21,9 @@ async def test_search_security_and_compliance_best_practices_content_unauthentic
         found_prescriptive_guidance = False
         assert isinstance(result.content[0], TextContent)
         for c in json.loads(result.content[0].text):
-            if c["url"].startswith("https://github.com/") or c["url"].startswith("http://github.com/"):
+            if c["url"].startswith("https://github.com/") or c["url"].startswith(
+                "http://github.com/"
+            ):
                 found_github = True
             if c["url"].startswith("https://docs.aws.amazon.com/prescriptive-guidance"):
                 found_prescriptive_guidance = True
