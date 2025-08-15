@@ -44,9 +44,9 @@ def test_extract_content_from_html_success(mock_markdownify, mock_bs):
     mock_soup.body = None
     mock_bs.return_value = mock_soup
     mock_markdownify.return_value = "# Test Content\n\nThis is test content."
-    
+
     html = "<html><body><main><h1>Test</h1><p>Content</p></main></body></html>"
-    result = extract_content_from_html(html)
+    extract_content_from_html(html)
 
 
 def test_format_result_no_content_available():
@@ -56,9 +56,9 @@ def test_format_result_no_content_available():
     content_type = "Documentation"
     max_length = 1000
     start_index = 100  # Beyond content length
-    
+
     result = format_result(url, content, start_index, max_length, content_type)
-    
+
     assert "No more content available" in result
     assert url in result
     assert content_type in result
@@ -74,10 +74,10 @@ def test_extract_content_from_html_no_main_uses_body(mock_markdownify, mock_bs):
     mock_soup.body = mock_body
     mock_bs.return_value = mock_soup
     mock_markdownify.return_value = "Body content"
-    
+
     html = "<html><body><p>Content</p></body></html>"
     result = extract_content_from_html(html)
-    
+
     assert result == "Body content"
 
 
@@ -90,10 +90,10 @@ def test_extract_content_from_html_no_body_uses_soup(mock_markdownify, mock_bs):
     mock_soup.body = None
     mock_bs.return_value = mock_soup
     mock_markdownify.return_value = "Full document content"
-    
+
     html = "<html><p>Content</p></html>"
     result = extract_content_from_html(html)
-    
+
     assert result == "Full document content"
 
 
@@ -104,15 +104,15 @@ def test_extract_content_from_html_removes_nav(mock_markdownify, mock_bs):
     mock_soup = MagicMock()
     mock_main_content = MagicMock()
     mock_nav_element = MagicMock()
-    
+
     mock_soup.select_one.return_value = mock_main_content
     mock_main_content.select.return_value = [mock_nav_element]
     mock_bs.return_value = mock_soup
     mock_markdownify.return_value = "Clean content"
-    
+
     html = "<html><body><main><nav>Navigation</nav><p>Content</p></main></body></html>"
     result = extract_content_from_html(html)
-    
+
     mock_nav_element.decompose.assert_called()
     assert result == "Clean content"
 
@@ -126,10 +126,10 @@ def test_extract_content_from_html_empty_result(mock_markdownify, mock_bs):
     mock_soup.select_one.return_value = mock_main_content
     mock_bs.return_value = mock_soup
     mock_markdownify.return_value = ""
-    
+
     html = "<html><body><main></main></body></html>"
     result = extract_content_from_html(html)
-    
+
     assert result == "<e>Page failed to be simplified from HTML</e>"
 
 
@@ -137,10 +137,10 @@ def test_extract_content_from_html_empty_result(mock_markdownify, mock_bs):
 def test_extract_content_from_html_exception(mock_bs):
     """Test extract_content_from_html with exception."""
     mock_bs.side_effect = Exception("Parsing error")
-    
+
     html = "<html><body><p>Content</p></body></html>"
     result = extract_content_from_html(html)
-    
+
     assert result.startswith("<e>Error converting HTML to Markdown:")
     assert "Parsing error" in result
 
@@ -183,17 +183,31 @@ def test_is_html_content_html_tag_not_at_start():
 def test_format_result_no_truncation():
     """Test format_result without truncation."""
     content = "Short content"
-    result = format_result(url="https://example.com/test", content=content, start_index=0, max_length=100, content_type="Test")
-    
-    expected = "AWS Security Reference Architecture Test from https://example.com/test:\n\nShort content"
+    result = format_result(
+        url="https://example.com/test",
+        content=content,
+        start_index=0,
+        max_length=100,
+        content_type="Test",
+    )
+
+    expected = (
+        "AWS Security Reference Architecture Test from https://example.com/test:\n\nShort content"
+    )
     assert result == expected
 
 
 def test_format_result_with_truncation():
     """Test format_result with truncation."""
     content = "This is a very long content that will be truncated for testing purposes"
-    result = format_result(url="https://example.com/test", content=content, start_index=0, max_length=20, content_type="Test")
-    
+    result = format_result(
+        url="https://example.com/test",
+        content=content,
+        start_index=0,
+        max_length=20,
+        content_type="Test",
+    )
+
     assert "This is a very long" in result
     assert "start_index=20" in result
     assert "Content truncated" in result
@@ -202,24 +216,42 @@ def test_format_result_with_truncation():
 def test_format_result_start_index_beyond_content():
     """Test format_result when start index is beyond content length."""
     content = "Short content"
-    result = format_result(url="https://example.com/test", content=content, start_index=100, max_length=50, content_type="Test")
-    
+    result = format_result(
+        url="https://example.com/test",
+        content=content,
+        start_index=100,
+        max_length=50,
+        content_type="Test",
+    )
+
     assert "No more content available" in result
 
 
 def test_format_result_empty_truncated_content():
     """Test format_result when truncated content is empty."""
     content = "Content"
-    result = format_result(url="https://example.com/test", content=content, start_index=7, max_length=50, content_type="Test")
-    
+    result = format_result(
+        url="https://example.com/test",
+        content=content,
+        start_index=7,
+        max_length=50,
+        content_type="Test",
+    )
+
     assert "No more content available" in result
 
 
 def test_format_result_with_start_index():
     """Test format_result with non-zero start index."""
     content = "This is a long content that spans multiple pages for testing"
-    result = format_result(url="https://example.com/test", content=content, start_index=10, max_length=20, content_type="Test")
-    
+    result = format_result(
+        url="https://example.com/test",
+        content=content,
+        start_index=10,
+        max_length=20,
+        content_type="Test",
+    )
+
     assert "long content that sp" in result
     assert "start_index=30" in result
 
@@ -227,8 +259,10 @@ def test_format_result_with_start_index():
 def test_format_result_default_content_type():
     """Test format_result with default content type."""
     content = "Test content"
-    result = format_result(url="https://example.com/test", content=content, start_index=0, max_length=100)
-    
+    result = format_result(
+        url="https://example.com/test", content=content, start_index=0, max_length=100
+    )
+
     assert "AWS Security Reference Architecture Documentation from" in result
 
 
@@ -243,7 +277,11 @@ def test_parse_recommendation_results_highly_rated():
     data = {
         "highlyRated": {
             "items": [
-                {"url": "https://example.com/1", "assetTitle": "Test Title 1", "abstract": "Test abstract 1"},
+                {
+                    "url": "https://example.com/1",
+                    "assetTitle": "Test Title 1",
+                    "abstract": "Test abstract 1",
+                },
                 {"url": "https://example.com/2", "assetTitle": "Test Title 2"},
             ]
         }
@@ -261,7 +299,9 @@ def test_parse_recommendation_results_journey():
             "items": [
                 {
                     "intent": "Security Setup",
-                    "urls": [{"url": "https://example.com/journey1", "assetTitle": "Journey Title 1"}],
+                    "urls": [
+                        {"url": "https://example.com/journey1", "assetTitle": "Journey Title 1"}
+                    ],
                 }
             ]
         }
@@ -276,7 +316,11 @@ def test_parse_recommendation_results_new():
     data = {
         "new": {
             "items": [
-                {"url": "https://example.com/new1", "assetTitle": "New Title 1", "dateCreated": "2024-01-01"},
+                {
+                    "url": "https://example.com/new1",
+                    "assetTitle": "New Title 1",
+                    "dateCreated": "2024-01-01",
+                },
                 {"url": "https://example.com/new2", "assetTitle": "New Title 2"},
             ]
         }
@@ -292,7 +336,11 @@ def test_parse_recommendation_results_similar():
     data = {
         "similar": {
             "items": [
-                {"url": "https://example.com/similar1", "assetTitle": "Similar Title 1", "abstract": "Similar abstract 1"},
+                {
+                    "url": "https://example.com/similar1",
+                    "assetTitle": "Similar Title 1",
+                    "abstract": "Similar abstract 1",
+                },
                 {"url": "https://example.com/similar2", "assetTitle": "Similar Title 2"},
             ]
         }
@@ -305,11 +353,7 @@ def test_parse_recommendation_results_similar():
 
 def test_parse_recommendation_results_missing_fields():
     """Test parse_recommendation_results with missing fields."""
-    data = {
-        "highlyRated": {
-            "items": [{"abstract": "Test abstract"}]
-        }
-    }
+    data = {"highlyRated": {"items": [{"abstract": "Test abstract"}]}}
     results = parse_recommendation_results(data)
     assert len(results) == 1
     assert results[0].url == ""

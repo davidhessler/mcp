@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -23,7 +23,6 @@ from awslabs.aws_sra_mcp_server.aws_documentation import (
     parse_search_results,
     search_sra_documentation,
 )
-from awslabs.aws_sra_mcp_server.models import RecommendationResult, SearchResult
 
 
 class TestAwsDocumentation:
@@ -50,14 +49,14 @@ class TestAwsDocumentation:
         mock_client_instance = AsyncMock()
         mock_client_instance.get.side_effect = Exception("API Error")
 
-        result = await _execute_recommendation_request(mock_client_instance, mock_context, "https://test.com")
+        result = await _execute_recommendation_request(
+            mock_client_instance, mock_context, "https://test.com"
+        )
         assert result == {}
         mock_client_instance.get.side_effect = Exception("API Error")
 
         result = await _execute_recommendation_request(
-            mock_context, 
-            mock_client_instance, 
-            "https://example.com"
+            mock_context, mock_client_instance, "https://example.com"
         )
         assert result == {}
         assert len(mock_context.errors) == 1
@@ -390,7 +389,7 @@ class TestGetMultipleRecommendations:
 
         urls = ["https://example.com/test1", "https://example.com/test2"]
         results = await get_multiple_recommendations(mock_context, urls)
-        
+
         assert len(results) == 2
         assert "https://example.com/test1" in results
         assert "https://example.com/test2" in results
@@ -404,7 +403,7 @@ class TestGetMultipleRecommendations:
 
         urls = ["https://example.com/test1", "https://example.com/test2"]
         results = await get_multiple_recommendations(mock_context, urls)
-        
+
         assert len(results) == 2
         assert results["https://example.com/test1"] == []
         assert results["https://example.com/test2"] == []
@@ -418,9 +417,9 @@ class TestGetMultipleRecommendations:
 
         # Create more URLs than MAX_CONCURRENT_REQUESTS to test batching
         urls = [f"https://example.com/test{i}" for i in range(15)]
-        
+
         with patch("awslabs.aws_sra_mcp_server.aws_documentation.MAX_CONCURRENT_REQUESTS", 5):
             results = await get_multiple_recommendations(mock_context, urls)
-        
+
         assert len(results) == 15
         assert mock_execute.call_count == 15

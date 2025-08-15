@@ -34,8 +34,10 @@ async def test_search_code_exception():
     mock_client = AsyncMock()
     mock_client.get.side_effect = Exception("API Error")
 
-    result = await _search_code(mock_client, "awslabs/sra-verify", "test", 10, {"Authorization": "Bearer token"})
-    
+    result = await _search_code(
+        mock_client, "awslabs/sra-verify", "test", 10, {"Authorization": "Bearer token"}
+    )
+
     assert result == []
 
 
@@ -47,8 +49,15 @@ async def test_search_issues_or_prs_exception():
     mock_client = AsyncMock()
     mock_client.get.side_effect = Exception("API Error")
 
-    result = await _search_issues_or_prs(mock_client, "awslabs/sra-verify", "test", 10, {"Authorization": "Bearer token"}, is_pr=False)
-    
+    result = await _search_issues_or_prs(
+        mock_client,
+        "awslabs/sra-verify",
+        "test",
+        10,
+        {"Authorization": "Bearer token"},
+        is_pr=False,
+    )
+
     assert result == []
 
 
@@ -59,24 +68,29 @@ async def test_search_github_success(mock_client, mock_context):
     mock_code_response = MagicMock()
     mock_code_response.status_code = 200
     mock_code_response.json.return_value = {
-        "items": [{
-            "name": "example.py",
-            "path": "src/example.py",
-            "html_url": "https://github.com/awslabs/sra-verify/blob/main/src/example.py",
-        }]
+        "items": [
+            {
+                "name": "example.py",
+                "path": "src/example.py",
+                "html_url": "https://github.com/awslabs/sra-verify/blob/main/src/example.py",
+            }
+        ]
     }
 
     mock_issues_response = MagicMock()
     mock_issues_response.status_code = 200
     mock_issues_response.json.return_value = {
-        "items": [{
-            "title": "Security issue example",
-            "html_url": "https://github.com/awslabs/sra-verify/issues/1",
-            "body": "This is an example security issue",
-        }]
+        "items": [
+            {
+                "title": "Security issue example",
+                "html_url": "https://github.com/awslabs/sra-verify/issues/1",
+                "body": "This is an example security issue",
+            }
+        ]
     }
 
     mock_client_instance = AsyncMock()
+
     def mock_get(url, **kwargs):
         if "search/code" in url:
             return mock_code_response
@@ -145,11 +159,16 @@ async def test_get_issue_markdown_success(mock_http_get, mock_context):
     mock_response.json.return_value = {
         "title": "Test Issue Title",
         "body": "Test issue body content",
-        "comments": 0
+        "comments": 0,
     }
     mock_http_get.return_value = mock_response
 
-    result = await get_issue_markdown(mock_context, "https://github.com/awslabs/sra-verify/issues/123", max_length=1000, start_index=0)
+    result = await get_issue_markdown(
+        mock_context,
+        "https://github.com/awslabs/sra-verify/issues/123",
+        max_length=1000,
+        start_index=0,
+    )
 
     assert "Test Issue Title" in result
     assert "Test issue body content" in result
@@ -165,12 +184,17 @@ async def test_get_issue_markdown_with_comments(mock_get_comments, mock_http_get
     mock_response.json.return_value = {
         "title": "Test Issue Title",
         "body": "Test issue body content",
-        "comments": 2
+        "comments": 2,
     }
     mock_http_get.return_value = mock_response
     mock_get_comments.return_value = "\n\n## Comments\n\nuser1: Comment 1\n\nuser2: Comment 2\n\n"
 
-    result = await get_issue_markdown(mock_context, "https://github.com/awslabs/sra-verify/issues/123", max_length=1000, start_index=0)
+    result = await get_issue_markdown(
+        mock_context,
+        "https://github.com/awslabs/sra-verify/issues/123",
+        max_length=1000,
+        start_index=0,
+    )
 
     assert "Test Issue Title" in result
     assert "Comments" in result
@@ -184,7 +208,12 @@ async def test_get_issue_markdown_exception(mock_http_get, mock_context):
     """Test get_issue_markdown exception handling."""
     mock_http_get.side_effect = Exception("API Error")
 
-    result = await get_issue_markdown(mock_context, "https://github.com/awslabs/sra-verify/issues/123", max_length=1000, start_index=0)
+    result = await get_issue_markdown(
+        mock_context,
+        "https://github.com/awslabs/sra-verify/issues/123",
+        max_length=1000,
+        start_index=0,
+    )
 
     assert result == ""
     assert len(mock_context.errors) == 1
@@ -200,7 +229,7 @@ async def test_get_pr_markdown_success(mock_client, mock_context):
         "title": "Test PR Title",
         "body": "Test PR body content",
         "commits": 0,
-        "comments": 0
+        "comments": 0,
     }
     mock_pr_response.raise_for_status.return_value = None
 
@@ -208,7 +237,12 @@ async def test_get_pr_markdown_success(mock_client, mock_context):
     mock_client_instance.__aenter__.return_value.get.return_value = mock_pr_response
     mock_client.return_value = mock_client_instance
 
-    result = await get_pr_markdown(mock_context, "https://github.com/awslabs/sra-verify/pull/456", max_length=1000, start_index=0)
+    result = await get_pr_markdown(
+        mock_context,
+        "https://github.com/awslabs/sra-verify/pull/456",
+        max_length=1000,
+        start_index=0,
+    )
 
     assert "Test PR Title" in result
     assert "Test PR body content" in result
@@ -225,7 +259,7 @@ async def test_get_pr_markdown_with_commits(mock_get_commits, mock_client, mock_
         "title": "Test PR Title",
         "body": "Test PR body content",
         "commits": 2,
-        "comments": 0
+        "comments": 0,
     }
     mock_pr_response.raise_for_status.return_value = None
 
@@ -234,11 +268,19 @@ async def test_get_pr_markdown_with_commits(mock_get_commits, mock_client, mock_
     mock_commits_response.raise_for_status.return_value = None
 
     mock_client_instance = AsyncMock()
-    mock_client_instance.__aenter__.return_value.get.side_effect = [mock_pr_response, mock_commits_response]
+    mock_client_instance.__aenter__.return_value.get.side_effect = [
+        mock_pr_response,
+        mock_commits_response,
+    ]
     mock_client.return_value = mock_client_instance
     mock_get_commits.return_value = "\n\n## Commits\n\nCommit details here\n\n"
 
-    result = await get_pr_markdown(mock_context, "https://github.com/awslabs/sra-verify/pull/456", max_length=1000, start_index=0)
+    result = await get_pr_markdown(
+        mock_context,
+        "https://github.com/awslabs/sra-verify/pull/456",
+        max_length=1000,
+        start_index=0,
+    )
 
     assert "Test PR Title" in result
     assert "Commits" in result
@@ -253,7 +295,12 @@ async def test_get_pr_markdown_exception(mock_client, mock_context):
     mock_client_instance.__aenter__.return_value.get.side_effect = Exception("API Error")
     mock_client.return_value = mock_client_instance
 
-    result = await get_pr_markdown(mock_context, "https://github.com/awslabs/sra-verify/pull/456", max_length=1000, start_index=0)
+    result = await get_pr_markdown(
+        mock_context,
+        "https://github.com/awslabs/sra-verify/pull/456",
+        max_length=1000,
+        start_index=0,
+    )
 
     assert result == ""
     assert len(mock_context.errors) == 1
@@ -272,7 +319,13 @@ async def test_get_raw_code_success(mock_client, mock_context):
     mock_client_instance.__aenter__.return_value.get.return_value = mock_response
     mock_client.return_value = mock_client_instance
 
-    result = await get_raw_code(mock_context, "https://github.com/awslabs/sra-verify/blob/main/test.py", max_length=1000, start_index=0, session_uuid="test-session")
+    result = await get_raw_code(
+        mock_context,
+        "https://github.com/awslabs/sra-verify/blob/main/test.py",
+        max_length=1000,
+        start_index=0,
+        session_uuid="test-session",
+    )
 
     assert "print('Hello, World!')" in result
     assert "This is test code" in result
@@ -289,7 +342,13 @@ async def test_get_raw_code_fallback_to_html(mock_read_html, mock_client, mock_c
     mock_client.return_value = mock_client_instance
     mock_read_html.return_value = "HTML fallback content"
 
-    result = await get_raw_code(mock_context, "https://github.com/awslabs/sra-verify/blob/main/test.py", max_length=1000, start_index=0, session_uuid="test-session")
+    result = await get_raw_code(
+        mock_context,
+        "https://github.com/awslabs/sra-verify/blob/main/test.py",
+        max_length=1000,
+        start_index=0,
+        session_uuid="test-session",
+    )
 
     assert result == "HTML fallback content"
     mock_read_html.assert_called_once()
@@ -304,9 +363,9 @@ async def test_http_get_with_retry_success(mock_client):
     mock_response = MagicMock()
     mock_client_instance = AsyncMock()
     mock_client_instance.get.return_value = mock_response
-    
+
     result = await _http_get_with_retry(mock_client_instance, "https://api.github.com/test")
-    
+
     assert result == mock_response
     mock_client_instance.get.assert_called_once_with("https://api.github.com/test")
 
@@ -322,11 +381,11 @@ async def test_http_get_with_retry_eventual_success(mock_client):
     mock_client_instance.get.side_effect = [
         httpx.NetworkError("Network error"),
         httpx.TimeoutException("Timeout"),
-        mock_response
+        mock_response,
     ]
-    
+
     result = await _http_get_with_retry(mock_client_instance, "https://api.github.com/test")
-    
+
     assert result == mock_response
     assert mock_client_instance.get.call_count == 3
 
@@ -335,15 +394,16 @@ async def test_http_get_with_retry_eventual_success(mock_client):
 @patch("awslabs.aws_sra_mcp_server.github.httpx.AsyncClient")
 async def test_http_get_with_retry_max_attempts(mock_client):
     """Test _http_get_with_retry max retry attempts."""
-    from awslabs.aws_sra_mcp_server.github import _http_get_with_retry
     from tenacity import RetryError
+
+    from awslabs.aws_sra_mcp_server.github import _http_get_with_retry
 
     mock_client_instance = AsyncMock()
     mock_client_instance.get.side_effect = httpx.NetworkError("Persistent network error")
-    
+
     with pytest.raises(RetryError):
         await _http_get_with_retry(mock_client_instance, "https://api.github.com/test")
-    
+
     assert mock_client_instance.get.call_count == 5
 
 
@@ -352,11 +412,11 @@ async def test_http_get_with_retry_max_attempts(mock_client):
 async def test_get_commits_str_exception(mock_http_get, mock_context):
     """Test __get_commits_str exception handling."""
     from awslabs.aws_sra_mcp_server.github import __get_commits_str
-    
+
     mock_http_get.side_effect = Exception("API Error")
-    
+
     result = await __get_commits_str(mock_context, "test", "repo", ["abc123"])
-    
+
     assert result == ""
     assert len(mock_context.errors) == 1
 
@@ -366,19 +426,17 @@ async def test_get_commits_str_exception(mock_http_get, mock_context):
 async def test_get_commits_str_no_files(mock_http_get, mock_context):
     """Test __get_commits_str with commit that has no files."""
     from awslabs.aws_sra_mcp_server.github import __get_commits_str
-    
+
     mock_response = MagicMock()
     mock_response.json.return_value = {
-        "commit": {
-            "message": "Test commit message"
-        }
+        "commit": {"message": "Test commit message"}
         # No "files" key at all
     }
     mock_response.raise_for_status.return_value = None
     mock_http_get.return_value = mock_response
-    
+
     result = await __get_commits_str(mock_context, "test", "repo", ["abc123"])
-    
+
     assert "Test commit message" in result
     assert "No files were changed" in result
 
@@ -388,11 +446,13 @@ async def test_get_commits_str_no_files(mock_http_get, mock_context):
 async def test_get_comments_str_exception(mock_http_get, mock_context):
     """Test __get_comments_str exception handling."""
     from awslabs.aws_sra_mcp_server.github import __get_comments_str
-    
+
     mock_http_get.side_effect = Exception("API Error")
-    
-    result = await __get_comments_str(mock_context, "https://api.github.com/repos/test/repo/issues/1/comments")
-    
+
+    result = await __get_comments_str(
+        mock_context, "https://api.github.com/repos/test/repo/issues/1/comments"
+    )
+
     assert result == ""
     assert len(mock_context.errors) == 1
 
@@ -401,17 +461,19 @@ async def test_get_comments_str_exception(mock_http_get, mock_context):
 @patch("awslabs.aws_sra_mcp_server.github._search_issues_or_prs")
 @patch("awslabs.aws_sra_mcp_server.github._search_code")
 @patch("awslabs.aws_sra_mcp_server.github.httpx.AsyncClient")
-async def test_search_github_repository_exception(mock_client, mock_search_code, mock_search_issues, mock_context):
+async def test_search_github_repository_exception(
+    mock_client, mock_search_code, mock_search_issues, mock_context
+):
     """Test search_github with repository-specific exception."""
     mock_client_instance = AsyncMock()
     mock_client.return_value = mock_client_instance
-    
+
     # Mock one search function to raise an exception
     mock_search_code.side_effect = Exception("Repository error")
     mock_search_issues.return_value = []
-    
+
     results = await search_github(mock_context, "security", limit=10)
-    
+
     # Should still return results despite the exception
     assert isinstance(results, list)
     assert len(mock_context.errors) > 0

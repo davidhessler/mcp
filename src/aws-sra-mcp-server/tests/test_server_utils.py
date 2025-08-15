@@ -34,7 +34,9 @@ from awslabs.aws_sra_mcp_server.server_utils import (
 @patch("awslabs.aws_sra_mcp_server.server_utils.is_html_content")
 @patch("awslabs.aws_sra_mcp_server.server_utils.extract_content_from_html")
 @patch("awslabs.aws_sra_mcp_server.server_utils.format_result")
-async def test_read_documentation_html_success(mock_format, mock_extract, mock_is_html, mock_client, mock_context):
+async def test_read_documentation_html_success(
+    mock_format, mock_extract, mock_is_html, mock_client, mock_context
+):
     """Test successful read_documentation_html execution."""
     mock_response = MagicMock()
     mock_response.status_code = 200
@@ -49,7 +51,9 @@ async def test_read_documentation_html_success(mock_format, mock_extract, mock_i
     mock_extract.return_value = "Extracted content"
     mock_format.return_value = "Formatted content"
 
-    result = await read_documentation_html(mock_context, "https://docs.aws.amazon.com/test.html", 1000, 0, "test-session")
+    result = await read_documentation_html(
+        mock_context, "https://docs.aws.amazon.com/test.html", 1000, 0, "test-session"
+    )
 
     assert result == "Formatted content"
     mock_is_html.assert_called_once_with("<html><body>Test content</body></html>", "")
@@ -64,7 +68,9 @@ async def test_read_documentation_html_http_error(mock_client, mock_context):
     mock_client_instance.__aenter__.return_value.get.side_effect = Exception("HTTP error")
     mock_client.return_value = mock_client_instance
 
-    result = await read_documentation_html(mock_context, "https://docs.aws.amazon.com/test.html", 1000, 0, "test-session")
+    result = await read_documentation_html(
+        mock_context, "https://docs.aws.amazon.com/test.html", 1000, 0, "test-session"
+    )
 
     assert "Failed to fetch" in result
     assert "HTTP error" in result
@@ -82,7 +88,9 @@ async def test_read_documentation_html_status_error(mock_client, mock_context):
     mock_client_instance.__aenter__.return_value.get.return_value = mock_response
     mock_client.return_value = mock_client_instance
 
-    result = await read_documentation_html(mock_context, "https://docs.aws.amazon.com/test.html", 1000, 0, "test-session")
+    result = await read_documentation_html(
+        mock_context, "https://docs.aws.amazon.com/test.html", 1000, 0, "test-session"
+    )
 
     assert "Failed to fetch" in result
     assert "status code 404" in result
@@ -146,7 +154,7 @@ async def test_log_truncation_no_truncation(mock_context):
     """Test log_truncation when content is not truncated."""
     content = "Short content"
     await log_truncation(mock_context, content, start_index=0, max_length=100)
-    
+
     assert len(mock_context.debug_messages) == 0
 
 
@@ -155,7 +163,7 @@ async def test_log_truncation_with_truncation(mock_context):
     """Test log_truncation when content is truncated."""
     content = "This is a very long content that will be truncated"
     await log_truncation(mock_context, content, start_index=0, max_length=10)
-    
+
     assert len(mock_context.debug_messages) == 1
     assert "Content truncated at 10 of 50 characters" in mock_context.debug_messages[0]
 
@@ -165,7 +173,7 @@ async def test_log_truncation_with_start_index(mock_context):
     """Test log_truncation with non-zero start index."""
     content = "This is a very long content that will be truncated"
     await log_truncation(mock_context, content, start_index=5, max_length=10)
-    
+
     assert len(mock_context.debug_messages) == 1
     assert "Content truncated at 15 of 50 characters" in mock_context.debug_messages[0]
 
@@ -173,9 +181,12 @@ async def test_log_truncation_with_start_index(mock_context):
 def test_process_html_content_is_html():
     """Test _process_html_content with HTML content."""
     html_content = "<html><body><h1>Title</h1><p>Content</p></body></html>"
-    
+
     with patch("awslabs.aws_sra_mcp_server.server_utils.is_html_content", return_value=True):
-        with patch("awslabs.aws_sra_mcp_server.server_utils.extract_content_from_html", return_value="# Title\n\nContent"):
+        with patch(
+            "awslabs.aws_sra_mcp_server.server_utils.extract_content_from_html",
+            return_value="# Title\n\nContent",
+        ):
             result = _process_html_content(html_content, "text/html")
             assert result == "# Title\n\nContent"
 
@@ -183,7 +194,7 @@ def test_process_html_content_is_html():
 def test_process_html_content_not_html():
     """Test _process_html_content with non-HTML content."""
     text_content = "Plain text content"
-    
+
     with patch("awslabs.aws_sra_mcp_server.server_utils.is_html_content", return_value=False):
         result = _process_html_content(text_content, "text/plain")
         assert result == "Plain text content"
@@ -207,19 +218,25 @@ def test_process_code_content():
 @patch("awslabs.aws_sra_mcp_server.server_utils._fetch_url")
 @patch("awslabs.aws_sra_mcp_server.server_utils.format_result")
 @patch("awslabs.aws_sra_mcp_server.server_utils.log_truncation")
-async def test_read_documentation_base_success(mock_log_truncation, mock_format_result, mock_fetch_url, mock_context):
+async def test_read_documentation_base_success(
+    mock_log_truncation, mock_format_result, mock_fetch_url, mock_context
+):
     """Test _read_documentation_base success."""
     mock_fetch_url.return_value = ("Raw content", None)
     mock_format_result.return_value = "Formatted result"
-    
+
     def mock_processor(raw_content, content_type):
         return f"Processed: {raw_content}"
 
-    result = await _read_documentation_base(mock_context, "https://example.com", 1000, 0, "session-123", mock_processor)
+    result = await _read_documentation_base(
+        mock_context, "https://example.com", 1000, 0, "session-123", mock_processor
+    )
 
     assert result == "Formatted result"
     mock_fetch_url.assert_called_once_with(mock_context, "https://example.com", "session-123")
-    mock_format_result.assert_called_once_with("https://example.com", "Processed: Raw content", 0, 1000)
+    mock_format_result.assert_called_once_with(
+        "https://example.com", "Processed: Raw content", 0, 1000
+    )
     mock_log_truncation.assert_called_once()
 
 
@@ -228,11 +245,13 @@ async def test_read_documentation_base_success(mock_log_truncation, mock_format_
 async def test_read_documentation_base_fetch_error(mock_fetch_url, mock_context):
     """Test _read_documentation_base with fetch error."""
     mock_fetch_url.return_value = ("", "Fetch error message")
-    
+
     def mock_processor(raw_content, content_type):
         return f"Processed: {raw_content}"
 
-    result = await _read_documentation_base(mock_context, "https://example.com", 1000, 0, "session-123", mock_processor)
+    result = await _read_documentation_base(
+        mock_context, "https://example.com", 1000, 0, "session-123", mock_processor
+    )
 
     assert result == "Fetch error message"
 
@@ -243,7 +262,9 @@ async def test_read_documentation_markdown(mock_read_base, mock_context):
     """Test read_documentation_markdown."""
     mock_read_base.return_value = "Markdown result"
 
-    result = await read_documentation_markdown(mock_context, "https://example.com/test.md", 1000, 0, "session-123")
+    result = await read_documentation_markdown(
+        mock_context, "https://example.com/test.md", 1000, 0, "session-123"
+    )
 
     assert result == "Markdown result"
     mock_read_base.assert_called_once()
