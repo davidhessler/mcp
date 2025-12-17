@@ -79,7 +79,6 @@ def translate_cli_to_ir(cli_command: str) -> IRTranslation:
 
 def interpret_command(
     cli_command: str,
-    default_region: str,
     max_results: int | None = None,
 ) -> InterpretedProgram:
     """Interpret the CLI command.
@@ -95,7 +94,7 @@ def interpret_command(
     if translation.command is None:
         return InterpretedProgram(translation=translation)
 
-    region = translation.command.region or default_region
+    region = translation.command.region
     if (
         translation.command.command_metadata.service_sdk_name in GLOBAL_SERVICE_REGIONS
         and region != GLOBAL_SERVICE_REGIONS[translation.command.command_metadata.service_sdk_name]
@@ -115,6 +114,7 @@ def interpret_command(
             region=region,
             client_side_filter=translation.command.client_side_filter,
             max_results=max_results,
+            endpoint_url=translation.command.endpoint_url,
         )
     except botocore.exceptions.ClientError as error:
         service_error = str(error)

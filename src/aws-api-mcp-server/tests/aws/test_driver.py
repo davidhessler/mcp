@@ -107,6 +107,7 @@ def test_get_local_credentials_raises_no_credentials_error(mock_session_class):
             IRTranslation(
                 command=IRCommand(
                     command_metadata=CommandMetadata('s3', None, 'ls'),
+                    region='us-east-1',
                     parameters={},
                     is_awscli_customization=True,
                 ),
@@ -118,21 +119,11 @@ def test_get_local_credentials_raises_no_credentials_error(mock_session_class):
             IRTranslation(
                 command=IRCommand(
                     command_metadata=CommandMetadata('s3', None, 'ls'),
+                    region='us-east-1',
                     parameters={},
                     is_awscli_customization=True,
                 ),
                 command_metadata=CommandMetadata('s3', None, 'ls'),
-            ),
-        ),
-        (
-            'aws dynamodb wait table-exists --table-name MyTable',
-            IRTranslation(
-                command=IRCommand(
-                    command_metadata=CommandMetadata('dynamodb', None, 'wait table-exists'),
-                    parameters={'--table-name': 'MyTable'},
-                    is_awscli_customization=True,
-                ),
-                command_metadata=CommandMetadata('dynamodb', None, 'wait table-exists'),
             ),
         ),
         (
@@ -184,14 +175,13 @@ def test_get_local_credentials_raises_no_credentials_error(mock_session_class):
             ),
         ),
         (
-            'aws batch list-jobs --no-verify-ssl --debug --endpoint-url http://gooble.com --no-sign-request',
+            'aws batch list-jobs --no-verify-ssl --debug --no-sign-request',
             IRTranslation(
                 validation_failures=[
                     DeniedGlobalArgumentsError(
                         'batch',
                         [
                             '--debug',
-                            '--endpoint-url',
                             '--no-sign-request',
                             '--no-verify-ssl',
                         ],
