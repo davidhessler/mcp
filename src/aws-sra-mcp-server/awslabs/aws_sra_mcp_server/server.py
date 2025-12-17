@@ -190,15 +190,30 @@ async def read_content(
     Returns:
         Markdown content of the AWS Security Reference Architecture documentation
     """
-    # Validate that URL is from docs.aws.amazon.com and ends with .html
+    # Validate URL is from allowed AWS docs or GitHub repositories
     url_str = str(url)
-    if not re.match(r"^https?://docs\.aws\.amazon\.com/", url_str) and not re.match(
-        r"^https?://github\.com/", url_str
-    ):
+    
+    # Check if URL is from AWS Security Reference Architecture docs
+    aws_sra_pattern = r"^https://docs\.aws\.amazon\.com/prescriptive-guidance/latest/security-reference-architecture"
+    
+    # Check if URL is from allowed GitHub repositories
+    github_sra_examples_pattern = r"^https://github\.com/aws-samples/aws-security-reference-architecture-examples"
+    github_sra_verify_pattern = r"^https://github\.com/awslabs/sra-verify/"
+    
+    is_valid_aws_docs = re.match(aws_sra_pattern, url_str)
+    is_valid_github = (re.match(github_sra_examples_pattern, url_str) or 
+                      re.match(github_sra_verify_pattern, url_str))
+    
+    if not is_valid_aws_docs and not is_valid_github:
         await ctx.error(
-            f"Invalid URL: {url_str}. URL must be from the docs.aws.amazon.com domain or GitHub"
+            f"Invalid URL: {url_str}. URL must start with "
+            f"'https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture' "
+            f"or 'https://github.com/aws-samples/aws-security-reference-architecture-examples' "
+            f"or 'https://github.com/awslabs/sra-verify/'"
         )
-        raise ValueError("URL must be from the docs.aws.amazon.com domain or GitHub")
+        raise ValueError(
+            "URL must be from AWS Security Reference Architecture docs or allowed GitHub repositories"
+        )
     if url_str.endswith(".html"):
         return await read_documentation_html(ctx, url_str, max_length, start_index, SESSION_UUID)
     elif url_str.endswith(".md"):
@@ -278,6 +293,9 @@ async def search_content(
 
     try:
         # Set timeout for the entire search operation (60 seconds)
+        # The thinking is that each call should take no more than 30-40 seconds to complete given it is a search. 
+        # 60 seconds gives a buffer and allow for situations where the processor executes the IO
+        # sequentially instead of parallel.  
         async with asyncio.timeout(60):
             # Search AWS documentation with timeout
             aws_docs_task = asyncio.create_task(search_sra_documentation(ctx, search_phrase, limit))

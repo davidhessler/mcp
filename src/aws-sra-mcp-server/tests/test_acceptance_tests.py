@@ -121,3 +121,93 @@ async def test_read_security_and_compliance_best_practices_content_github_code()
             "Description: Installs the AWS SRA GuardDuty solution.  If needed, the AWS SRA common "
             "prerequisite solution is also installed.  (sra-1u3sd7f8m)" in text_result
         )
+
+
+@pytest.mark.asyncio
+async def test_read_content_valid_aws_sra_url():
+    """Test that valid AWS SRA documentation URLs are accepted"""
+    async with client:
+        result = await client.call_tool(
+            "read_content",
+            {
+                "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html",
+                "start_index": 0,
+            },
+        )
+        assert len(result.content) > 0
+        assert isinstance(result.content[0], TextContent)
+
+
+@pytest.mark.asyncio
+async def test_read_content_valid_github_sra_examples_url():
+    """Test that valid GitHub SRA examples URLs are accepted"""
+    async with client:
+        result = await client.call_tool(
+            "read_content",
+            {
+                "url": "https://github.com/aws-samples/aws-security-reference-architecture-examples/issues/225",
+                "start_index": 0,
+            },
+        )
+        assert len(result.content) > 0
+        assert isinstance(result.content[0], TextContent)
+
+
+@pytest.mark.asyncio
+async def test_read_content_valid_github_sra_verify_url():
+    """Test that valid GitHub SRA verify URLs are accepted"""
+    async with client:
+        result = await client.call_tool(
+            "read_content",
+            {
+                "url": "https://github.com/awslabs/sra-verify/blob/main/README.md",
+                "start_index": 0,
+            },
+        )
+        assert len(result.content) > 0
+        assert isinstance(result.content[0], TextContent)
+
+
+@pytest.mark.asyncio
+async def test_read_content_invalid_aws_docs_url():
+    """Test that invalid AWS docs URLs are rejected"""
+    async with client:
+        with pytest.raises(Exception) as exc_info:
+            await client.call_tool(
+                "read_content",
+                {
+                    "url": "https://docs.aws.amazon.com/ec2/latest/userguide/concepts.html",
+                    "start_index": 0,
+                },
+            )
+        assert "URL must be from AWS Security Reference Architecture docs or allowed GitHub repositories" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_read_content_invalid_github_url():
+    """Test that invalid GitHub URLs are rejected"""
+    async with client:
+        with pytest.raises(Exception) as exc_info:
+            await client.call_tool(
+                "read_content",
+                {
+                    "url": "https://github.com/aws/aws-cli/blob/main/README.rst",
+                    "start_index": 0,
+                },
+            )
+        assert "URL must be from AWS Security Reference Architecture docs or allowed GitHub repositories" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_read_content_invalid_domain_url():
+    """Test that URLs from invalid domains are rejected"""
+    async with client:
+        with pytest.raises(Exception) as exc_info:
+            await client.call_tool(
+                "read_content",
+                {
+                    "url": "https://example.com/some-page.html",
+                    "start_index": 0,
+                },
+            )
+        assert "URL must be from AWS Security Reference Architecture docs or allowed GitHub repositories" in str(exc_info.value)

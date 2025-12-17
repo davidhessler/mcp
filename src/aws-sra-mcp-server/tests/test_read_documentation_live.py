@@ -68,23 +68,24 @@ async def test_read_documentation_with_pagination(mock_read_impl, client):
     """Test read_documentation with pagination."""
 
     # Setup mock to return different content for different start indices
+    test_url = "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/test.html"
     async def mock_impl(ctx, url, max_length, start_index, session_uuid):
         if start_index == 0:
             return (
                 "AWS Security Reference Architecture Documentation from "
-                "https://docs.aws.amazon.com/test.html:\n\nPart 1\n\n<e>Content truncated. Call "
+                f"{test_url}:\n\nPart 1\n\n<e>Content truncated. Call "
                 "the read_documentation tool with start_index=6 to get more content.</e>"
             )
         elif start_index == 6:
             return (
                 "AWS Security Reference Architecture Documentation from "
-                "https://docs.aws.amazon.com/test.html:\n\nPart 2\n\n<e>Content truncated. Call "
+                f"{test_url}:\n\nPart 2\n\n<e>Content truncated. Call "
                 "the read_documentation tool with start_index=12 to get more content.</e>"
             )
         else:
             return (
                 "AWS Security Reference Architecture Documentation from "
-                "https://docs.aws.amazon.com/test.html:\n\nPart 3"
+                f"{test_url}:\n\nPart 3"
             )
 
     mock_read_impl.side_effect = mock_impl
@@ -94,7 +95,7 @@ async def test_read_documentation_with_pagination(mock_read_impl, client):
         result1 = await call_tool(
             client,
             "read_content",
-            url="https://docs.aws.amazon.com/test.html",
+            url=test_url,
             max_length=10,
             start_index=0,
         )
@@ -106,7 +107,7 @@ async def test_read_documentation_with_pagination(mock_read_impl, client):
         result2 = await call_tool(
             client,
             "read_content",
-            url="https://docs.aws.amazon.com/test.html",
+            url=test_url,
             max_length=10,
             start_index=6,
         )
@@ -118,7 +119,7 @@ async def test_read_documentation_with_pagination(mock_read_impl, client):
         result3 = await call_tool(
             client,
             "read_content",
-            url="https://docs.aws.amazon.com/test.html",
+            url=test_url,
             max_length=10,
             start_index=12,
         )
