@@ -15,7 +15,7 @@
 
 import httpx
 import pytest
-from awslabs.aws_documentation_mcp_server.models import SearchResult
+from awslabs.aws_documentation_mcp_server.models import SearchResponse, SearchResult
 from awslabs.aws_documentation_mcp_server.server_utils import (
     DEFAULT_USER_AGENT,
     SEARCH_RESULT_CACHE,
@@ -309,14 +309,20 @@ class TestReadDocumentationImpl:
         SEARCH_RESULT_CACHE.clear()
 
         add_search_result_cache_item(
-            [
-                SearchResult(
-                    rank_order=1,
-                    title='testtitle1',
-                    url='https://docs.aws.amazon.com/test.html',
-                    query_id='test-query-id',
-                )
-            ]
+            SearchResponse(
+                search_results=[
+                    SearchResult(
+                        rank_order=1,
+                        title='testtitle1',
+                        url='https://docs.aws.amazon.com/test.html',
+                    )
+                ],
+                facets={
+                    'product_types': ['Amazon S3', 'AWS Lambda'],
+                    'guide_types': ['User Guide', 'API Reference'],
+                },
+                query_id='test-query-id',
+            )
         )
 
         # Create a real Context object with mocked methods
@@ -372,6 +378,32 @@ class TestReadDocumentationImpl:
                 )
 
 
+class TestUserAgentCustomization:
+    """Test custom User-Agent functionality."""
+
+    @patch.dict('os.environ', {'MCP_USER_AGENT': 'Custom/1.0 Browser'}, clear=False)
+    def test_custom_user_agent_from_env(self):
+        """Test that custom User-Agent is used when MCP_USER_AGENT is set."""
+        import awslabs.aws_documentation_mcp_server.server_utils as server_utils
+        import importlib
+
+        importlib.reload(server_utils)
+
+        assert 'Custom/1.0 Browser' in server_utils.DEFAULT_USER_AGENT
+        assert 'ModelContextProtocol' in server_utils.DEFAULT_USER_AGENT
+
+    @patch.dict('os.environ', {}, clear=True)
+    def test_default_user_agent_when_no_env(self):
+        """Test that default User-Agent is used when MCP_USER_AGENT is not set."""
+        import awslabs.aws_documentation_mcp_server.server_utils as server_utils
+        import importlib
+
+        importlib.reload(server_utils)
+
+        assert 'Chrome' in server_utils.DEFAULT_USER_AGENT
+        assert 'ModelContextProtocol' in server_utils.DEFAULT_USER_AGENT
+
+
 class TestVersionImport:
     """Test version import logic with metadata and fallback scenarios."""
 
@@ -421,13 +453,25 @@ class TestSearchResultCache:
         SEARCH_RESULT_CACHE.clear()
 
         add_search_result_cache_item(
-            [SearchResult(rank_order=1, title='testtitle1', url='testurl1', query_id='query1')]
+            SearchResponse(
+                search_results=[SearchResult(rank_order=1, title='testtitle1', url='testurl1')],
+                facets={},
+                query_id='query1',
+            )
         )
         add_search_result_cache_item(
-            [SearchResult(rank_order=1, title='testtitle2', url='testurl2', query_id='query2')]
+            SearchResponse(
+                search_results=[SearchResult(rank_order=1, title='testtitle2', url='testurl2')],
+                facets={},
+                query_id='query2',
+            )
         )
         add_search_result_cache_item(
-            [SearchResult(rank_order=1, title='testtitle3', url='testurl3', query_id='query3')]
+            SearchResponse(
+                search_results=[SearchResult(rank_order=1, title='testtitle3', url='testurl3')],
+                facets={},
+                query_id='query3',
+            )
         )
 
         test_query_id = get_query_id_from_cache('testurl1')
@@ -435,7 +479,11 @@ class TestSearchResultCache:
         assert test_query_id == 'query1'
 
         add_search_result_cache_item(
-            [SearchResult(rank_order=1, title='testtitle4', url='testurl4', query_id='query4')]
+            SearchResponse(
+                search_results=[SearchResult(rank_order=1, title='testtitle4', url='testurl4')],
+                facets={},
+                query_id='query4',
+            )
         )
 
         test_query_id = get_query_id_from_cache('testurl1')
@@ -445,25 +493,35 @@ class TestSearchResultCache:
         assert test_query_id == 'query3'
 
     def test_get_query_id_from_cache(self):
-        """Test that get_query_id_from_cache returns the correct SearchResults."""
+        """Test that get_query_id_from_cache returns the correct search_results."""
         SEARCH_RESULT_CACHE.clear()
 
         add_search_result_cache_item(
-            [SearchResult(rank_order=1, title='testtitle1', url='testurl1', query_id='query1')]
+            SearchResponse(
+                search_results=[SearchResult(rank_order=1, title='testtitle1', url='testurl1')],
+                facets={},
+                query_id='query1',
+            )
         )
         add_search_result_cache_item(
-            [
-                SearchResult(rank_order=1, title='testtitle1', url='testurl1', query_id='query2'),
-                SearchResult(rank_order=2, title='testtitle2', url='testurl2', query_id='query2'),
-            ]
+            SearchResponse(
+                search_results=[
+                    SearchResult(rank_order=1, title='testtitle1', url='testurl1'),
+                    SearchResult(rank_order=2, title='testtitle2', url='testurl2'),
+                ],
+                facets={},
+                query_id='query2',
+            )
         )
         add_search_result_cache_item(
-            [
-                SearchResult(rank_order=1, title='testtitle3', url='testurl3', query_id='query3'),
-                SearchResult(
-                    rank_order=2, title='testtitle5', url='testurl5', query_id='test-query-id-5'
-                ),
-            ]
+            SearchResponse(
+                search_results=[
+                    SearchResult(rank_order=1, title='testtitle3', url='testurl3'),
+                    SearchResult(rank_order=2, title='testtitle5', url='testurl5'),
+                ],
+                facets={},
+                query_id='test-query-id-5',
+            )
         )
 
         # Should get most recent query ID even with duplicate URLs
@@ -477,10 +535,7 @@ class TestSearchResultCache:
 
         test_query_id = get_query_id_from_cache('testurl3')
         assert test_query_id is not None
-        assert test_query_id == 'query3'
+        assert test_query_id == 'test-query-id-5'
 
         test_query_id = get_query_id_from_cache('testurl4')
         assert test_query_id is None
-
-        test_query_id = get_query_id_from_cache('testurl5')
-        assert test_query_id == 'test-query-id-5'

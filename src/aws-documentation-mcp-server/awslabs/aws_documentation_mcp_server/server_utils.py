@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import httpx
-from awslabs.aws_documentation_mcp_server.models import SearchResult
+import os
+from awslabs.aws_documentation_mcp_server.models import SearchResponse
 from awslabs.aws_documentation_mcp_server.util import (
     extract_content_from_html,
     format_documentation_result,
@@ -32,7 +33,14 @@ except Exception:
     from . import __version__
 
 
-DEFAULT_USER_AGENT = f'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 ModelContextProtocol/{__version__} (AWS Documentation Server)'
+# Allow User-Agent override via environment variable
+BASE_USER_AGENT = os.getenv(
+    'MCP_USER_AGENT',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
+)
+DEFAULT_USER_AGENT = (
+    f'{BASE_USER_AGENT} ModelContextProtocol/{__version__} (AWS Documentation Server)'
+)
 
 
 async def read_documentation_impl(
@@ -97,20 +105,20 @@ async def read_documentation_impl(
 SEARCH_RESULT_CACHE = deque(maxlen=3)
 
 
-def add_search_result_cache_item(search_results: list[SearchResult]) -> None:
+def add_search_result_cache_item(search_response: SearchResponse) -> None:
     """Adds list of SearchResult items to cache.
 
     Add search results to the front of the cache, to ensure that
     the most recent query ID is ahead for duplicate URLs.
 
     Args:
-        search_results: List returned by the search_documentation tool
+        search_response: SearchResponse object returned by the search_documentation tool
 
     Returns:
         None; updates the global SEARCH_RESULT_CACHE
 
     """
-    SEARCH_RESULT_CACHE.appendleft(search_results)
+    SEARCH_RESULT_CACHE.appendleft(search_response)
 
 
 def get_query_id_from_cache(url: str) -> Optional[str]:
@@ -126,11 +134,11 @@ def get_query_id_from_cache(url: str) -> Optional[str]:
         Query ID of URL, or None
 
     """
-    for _, search_results in enumerate(SEARCH_RESULT_CACHE):
-        for search_result in search_results:
+    for _, search_response in enumerate(SEARCH_RESULT_CACHE):
+        for search_result in search_response.search_results:
             if search_result.url == url:
                 # Sanitization of query_id just in case
-                query_id = quote(search_result.query_id)
+                query_id = quote(search_response.query_id)
                 return query_id
 
     return None
