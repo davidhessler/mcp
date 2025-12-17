@@ -110,7 +110,7 @@ For read operations, the following permissions are required:
         "athena:ListDatabases",
         "athena:ListTableMetadata",
         "athena:GetWorkGroup",
-        "athena:ListWorkGroups"
+        "athena:ListWorkGroups",
         "sts:GetCallerIdentity"
       ],
       "Resource": "*"
@@ -134,7 +134,7 @@ For write operations, we recommend the following IAM policies:
 
 | Cursor | VS Code |
 |:------:|:-------:|
-| [![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en/install-mcp?name=aws.aws-dataprocessing-mcp-server&config=eyJjb21tYW5kIjoidXZ4IGF3cy5hd3MtZGF0YXByb2Nlc3NpbmctbWNwLXNlcnZlckBsYXRlc3QgLS1hbGxvdy13cml0ZSIsImVudiI6eyJGQVNUTUNQX0xPR19MRVZFTCI6IkVSUk9SIiwiQVdTX1JFR0lPTiI6InVzLWVhc3QtMSJ9LCJhdXRvQXBwcm92ZSI6W10sImRpc2FibGVkIjpmYWxzZSwidHJhbnNwb3J0VHlwZSI6InN0ZGlvIn0%3D) | [![Install on VS Code](https://img.shields.io/badge/Install_on-VS_Code-FF9900?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=AWS%20Data%20Processing%20MCP%20Server&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22aws.aws-dataprocessing-mcp-server%40latest%22%2C%22--allow-write%22%5D%2C%22env%22%3A%7B%22FASTMCP_LOG_LEVEL%22%3A%22ERROR%22%2C%22AWS_REGION%22%3A%22us-east-1%22%7D%2C%22autoApprove%22%3A%5B%5D%2C%22disabled%22%3Afalse%2C%22transportType%22%3A%22stdio%22%7D) |
+| [![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en-US/install-mcp?name=awslabs.aws-dataprocessing-mcp-server&config=eyJjb21tYW5kIjoidXZ4IGF3c2xhYnMuYXdzLWRhdGFwcm9jZXNzaW5nLW1jcC1zZXJ2ZXJAbGF0ZXN0IC0tYWxsb3ctd3JpdGUiLCJlbnYiOnsiRkFTVE1DUF9MT0dfTEVWRUwiOiJFUlJPUiIsIkFXU19SRUdJT04iOiJ1cy1lYXN0LTEifSwiYXV0b0FwcHJvdmUiOltdLCJkaXNhYmxlZCI6ZmFsc2UsInRyYW5zcG9ydFR5cGUiOiJzdGRpbyJ9) | [![Install on VS Code](https://img.shields.io/badge/Install_on-VS_Code-FF9900?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=AWS%20Data%20Processing%20MCP%20Server&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22awslabs.aws-dataprocessing-mcp-server%40latest%22%2C%22--allow-write%22%5D%2C%22env%22%3A%7B%22FASTMCP_LOG_LEVEL%22%3A%22ERROR%22%2C%22AWS_REGION%22%3A%22us-east-1%22%7D%2C%22autoApprove%22%3A%5B%5D%2C%22disabled%22%3Afalse%2C%22transportType%22%3A%22stdio%22%7D) |
 
 ## Quickstart
 
@@ -166,6 +166,36 @@ This quickstart guide walks you through the steps to configure the Amazon Data P
   }
 }
 ```
+
+### Windows Installation
+
+For Windows users, the MCP server configuration format is slightly different:
+
+```json
+{
+  "mcpServers": {
+    "awslabs.aws-dataprocessing-mcp-server": {
+      "disabled": false,
+      "timeout": 60,
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "tool",
+        "run",
+        "--from",
+        "awslabs.aws-dataprocessing-mcp-server@latest",
+        "awslabs.aws-dataprocessing-mcp-server.exe"
+      ],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR",
+        "AWS_PROFILE": "your-aws-profile",
+        "AWS_REGION": "us-east-1"
+      }
+    }
+  }
+}
+```
+
 After a few minutes, you should see a green indicator if your MCP server definition is valid.
 
 4. Open a chat panel in Cursor (e.g., `Ctrl/⌘ + L`).  In your Cursor chat window, enter your prompt. For example, "Look at all the tables from my account federated across GDC"
@@ -342,6 +372,13 @@ Controls whether the MCP server adds and verifies MCP-managed tags on resources.
 | Tool Name | Description | Key Operations | Requirements |
 |-----------|-------------|----------------|--------------|
 | manage_aws_emr_ec2_steps | Manage Amazon EMR steps for processing data on EMR clusters | add-steps, cancel-steps, describe-step, list-steps | --allow-write flag for add/cancel operations, appropriate AWS permissions |
+
+### EMR Serverless Handler Tools
+
+| Tool Name | Description | Key Operations | Requirements |
+|-----------|-------------|----------------|--------------|
+| manage_aws_emr_serverless_applications | Manage Amazon EMR Serverless applications with comprehensive lifecycle control | create-application, get-application, update-application, delete-application, list-applications, start-application, stop-application | --allow-write flag for create/update/delete/start/stop operations, appropriate AWS permissions |
+| manage_aws_emr_serverless_job_runs | Manage Amazon EMR Serverless job runs for executing data processing workloads | start-job-run, get-job-run, cancel-job-run, list-job-runs, get-dashboard-for-job-run | --allow-write flag for start/cancel operations, application must exist, appropriate AWS permissions |
 
 ### Athena Query Handler Tools
 

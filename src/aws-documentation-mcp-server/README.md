@@ -24,7 +24,29 @@ This MCP server provides tools to access AWS documentation, search for content, 
 |:------:|:-------:|
 | [![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en/install-mcp?name=awslabs.aws-documentation-mcp-server&config=eyJjb21tYW5kIjoidXZ4IGF3c2xhYnMuYXdzLWRvY3VtZW50YXRpb24tbWNwLXNlcnZlckBsYXRlc3QiLCJlbnYiOnsiRkFTVE1DUF9MT0dfTEVWRUwiOiJFUlJPUiIsIkFXU19ET0NVTUVOVEFUSU9OX1BBUlRJVElPTiI6ImF3cyJ9LCJkaXNhYmxlZCI6ZmFsc2UsImF1dG9BcHByb3ZlIjpbXX0%3D) | [![Install on VS Code](https://img.shields.io/badge/Install_on-VS_Code-FF9900?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=AWS%20Documentation%20MCP%20Server&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22awslabs.aws-documentation-mcp-server%40latest%22%5D%2C%22env%22%3A%7B%22FASTMCP_LOG_LEVEL%22%3A%22ERROR%22%2C%22AWS_DOCUMENTATION_PARTITION%22%3A%22aws%22%7D%2C%22disabled%22%3Afalse%2C%22autoApprove%22%3A%5B%5D%7D) |
 
-Configure the MCP server in your MCP client configuration (e.g., for Amazon Q Developer CLI, edit `~/.aws/amazonq/mcp.json`):
+Configure the MCP server in your MCP client configuration:
+
+```json
+{
+  "mcpServers": {
+    "awslabs.aws-documentation-mcp-server": {
+      "command": "uvx",
+      "args": ["awslabs.aws-documentation-mcp-server@latest"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR",
+        "AWS_DOCUMENTATION_PARTITION": "aws",
+        "MCP_USER_AGENT": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+      },
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}
+```
+
+For [Amazon Q Developer CLI](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line.html), add the MCP client configuration and tool command to the agent file in `~/.aws/amazonq/cli-agents`.
+
+Example, `~/.aws/amazonq/cli-agents/default.json`
 
 ```json
 {
@@ -39,11 +61,46 @@ Configure the MCP server in your MCP client configuration (e.g., for Amazon Q De
       "disabled": false,
       "autoApprove": []
     }
+  },
+  "tools": [
+    // .. other existing tools
+    "@awslabs.aws-documentation-mcp-server"
+  ],
+}
+```
+
+### Windows Installation
+
+For Windows users, the MCP server configuration format is slightly different:
+
+```json
+{
+  "mcpServers": {
+    "awslabs.aws-documentation-mcp-server": {
+      "disabled": false,
+      "timeout": 60,
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "tool",
+        "run",
+        "--from",
+        "awslabs.aws-documentation-mcp-server@latest",
+        "awslabs.aws-documentation-mcp-server.exe"
+      ],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR",
+        "AWS_DOCUMENTATION_PARTITION": "aws"
+      }
+    }
   }
 }
 ```
 
+
 > **Note**: Set `AWS_DOCUMENTATION_PARTITION` to `aws-cn` to query AWS China documentation instead of global AWS documentation.
+>
+> **Corporate Networks**: If you're behind a corporate proxy or firewall that blocks certain User-Agent strings, set `MCP_USER_AGENT` to match your browser's User-Agent to an allowable string.
 
 or docker after a successful `docker build -t mcp/aws-documentation .`:
 
@@ -66,6 +123,26 @@ or docker after a successful `docker build -t mcp/aws-documentation .`:
       "disabled": false,
       "autoApprove": []
     }
+  }
+}
+```
+
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|----------|
+| `FASTMCP_LOG_LEVEL` | Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL) | `WARNING` |
+| `AWS_DOCUMENTATION_PARTITION` | AWS partition (`aws` or `aws-cn`) | `aws` |
+| `MCP_USER_AGENT` | Custom User-Agent string for HTTP requests | Chrome-based default |
+
+### Corporate Network Support
+
+For corporate environments with proxy servers or firewalls that block certain User-Agent strings:
+
+```json
+{
+  "env": {
+    "MCP_USER_AGENT": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
   }
 }
 ```
@@ -94,7 +171,7 @@ read_documentation(url: str) -> str
 Searches AWS documentation using the official AWS Documentation Search API.
 
 ```python
-search_documentation(search_phrase: str, limit: int) -> list[dict]
+search_documentation(ctx: Context, search_phrase: str, limit: int, product_types: Optional[List[str]], guide_types: Optional[List[str]]) -> SearchResponse
 ```
 
 ### recommend (global only)
@@ -112,3 +189,12 @@ Gets a list of available AWS services in China regions.
 ```python
 get_available_services() -> str
 ```
+
+## Development
+
+For getting started with development on the AWS Documentation MCP server, please refer to the awslabs/mcp DEVELOPER_GUIDE first. Everything below this is specific to AWS Documentation MCP Server development.
+
+### Running tests
+
+Unit tests: `uv run --frozen pytest --cov --cov-branch --cov-report=term-missing`
+Unit tests with integration tests: `uv run --frozen pytest --cov --cov-branch --cov-report=term-missing --run-live`

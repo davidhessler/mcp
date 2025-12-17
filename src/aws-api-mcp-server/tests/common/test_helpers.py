@@ -1,5 +1,10 @@
 import pytest
-from awslabs.aws_api_mcp_server.core.common.helpers import validate_aws_region
+from awslabs.aws_api_mcp_server.core.common.helpers import (
+    get_requests_session,
+    is_help_operation,
+    validate_aws_region,
+)
+from requests.adapters import HTTPAdapter
 from unittest.mock import MagicMock, patch
 
 
@@ -85,3 +90,54 @@ def test_validate_aws_region_invalid_regions(mock_logger: MagicMock, invalid_reg
     # Check that logger.error was called with the correct message
     expected_error_message = f'{invalid_region} is not a valid AWS Region'
     mock_logger.error.assert_called_once_with(expected_error_message)
+
+
+def test_get_requests_session():
+    """Test that get_requests_session returns a properly configured session."""
+    session = get_requests_session()
+
+    https_adapter = session.get_adapter('https://example.com')
+    assert isinstance(https_adapter, HTTPAdapter)
+
+    retry_config = https_adapter.max_retries
+    assert retry_config.total == 3
+    assert retry_config.backoff_factor == 1
+    assert retry_config.status_forcelist == [429, 500, 502, 503, 504]
+    assert retry_config.allowed_methods == {'HEAD', 'GET', 'OPTIONS', 'POST'}
+
+
+@pytest.mark.parametrize(
+    'args,expected',
+    [
+        (['help'], True),
+        (['--help'], True),
+        (['command', 'help'], True),
+        (['command', '--help'], True),
+        (['help', 'command'], True),
+        (['command', 'arg', 'help'], True),
+        (['command', 'arg'], False),
+        ([], False),
+        (['--region', 'us-east-1'], False),
+        (['HeLp'], True),
+        (['command', 'HELP'], True),
+        ([10, 'Arg', 'HELP'], True),
+        (['--Help'], True),
+        (['command', '--Help'], True),
+        (['--help', 'command'], True),
+        (['--help', '--region', 'us-west-2'], True),
+        (['command', 'help', '--debug'], True),
+        (['command', '--region', 'us-east-1', 'help'], True),
+        (['command', 'helping'], False),
+        (['helping'], False),
+        ([{}, {}], False),
+        (['-h'], False),
+        (['command', '-h'], False),
+        ([{'MaxItems': 10}, ''], False),
+        ([' ', '--help'], True),
+        (['command', ' ', 'help'], True),
+        (['--help', '--help'], True),
+    ],
+)
+def test_is_help_operation(args, expected):
+    """Test is_help_operation identifies help commands correctly."""
+    assert is_help_operation(args) == expected

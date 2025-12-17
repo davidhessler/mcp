@@ -15,12 +15,15 @@
 import json
 import os
 import re
+import requests
 import time
 from botocore.response import StreamingBody
 from contextlib import contextmanager
 from datetime import datetime
 from loguru import logger
+from requests.adapters import HTTPAdapter
 from typing import Any
+from urllib3 import Retry
 
 
 @contextmanager
@@ -62,6 +65,11 @@ def expand_user_home_directory(args: list[str]) -> list[str]:
     return [os.path.expanduser(arg) for arg in args]
 
 
+def is_help_operation(args: list[Any]) -> bool:
+    """Check if the command is a help operation."""
+    return any(str(arg).lower() in ['help', '--help'] for arg in args)
+
+
 def validate_aws_region(region: str):
     """Checks if provided region is a valid AWS Region."""
     aws_region_pattern = '^(\\w{1,10})-(\\w{1,10}-)?(\\w{1,10})-\\d{1,2}$'
@@ -70,3 +78,20 @@ def validate_aws_region(region: str):
         error_message = f'{region} is not a valid AWS Region'
         logger.error(error_message)
         raise ValueError(error_message)
+
+
+def get_requests_session() -> requests.Session:
+    """Configured requests session with common retry strategy."""
+    retry_strategy = Retry(
+        total=3,
+        backoff_factor=1,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods={'HEAD', 'GET', 'OPTIONS', 'POST'},
+    )
+    session = requests.Session()
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+
+    session.mount('https://', adapter)
+    session.mount('http://', adapter)
+
+    return session

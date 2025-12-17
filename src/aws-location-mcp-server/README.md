@@ -51,6 +51,35 @@ Configure the server in your MCP configuration file. Here are some ways you can 
   }
 }
 ```
+### Windows Installation
+
+For Windows users, the MCP server configuration format is slightly different:
+
+```json
+{
+  "mcpServers": {
+    "awslabs.aws-location-mcp-server": {
+      "disabled": false,
+      "timeout": 60,
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "tool",
+        "run",
+        "--from",
+        "awslabs.aws-location-mcp-server@latest",
+        "awslabs.aws-location-mcp-server.exe"
+      ],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR",
+        "AWS_PROFILE": "your-aws-profile",
+        "AWS_REGION": "us-east-1"
+      }
+    }
+  }
+}
+```
+
 
 ### Using Temporary Credentials
 
@@ -205,12 +234,12 @@ Returns route geometry, distance, duration, and turn-by-turn directions.
 
 See [AWS documentation](https://docs.aws.amazon.com/location/latest/developerguide/calculate-routes-custom-avoidance-shortest.html) for more details.
 
-### get_coordinates
+### geocode
 
 Get coordinates for a location name or address.
 
 ```python
-get_coordinates(location: str) -> dict
+geocode(location: str) -> dict
 ```
 
 ### optimize_waypoints
